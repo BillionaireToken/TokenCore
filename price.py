@@ -1,6 +1,6 @@
 # Simple python script used to calculate the amount of XBL associated with a purchase in BTC, ETH and LTC
 # v.01 by Gluedog
-# Next version will use the coinmarketcap API to grab prices automatically so we won't have to hardcode them.
+# Next version will use the Coinmarketcap API to grab prices automatically so we won't have to hardcode them.
 
 btc_price = 4572.78
 eth_price = 389.07  
