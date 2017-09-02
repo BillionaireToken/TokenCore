@@ -28,7 +28,7 @@ pragma solidity ^0.4.8;
     /* Owner of account can approve (allow) the transfer of an amount to another account */
     mapping(address => mapping (address => uint256)) allowed;
   
-     // Constructor:
+     // Constructor, this function only gets called once, when the contract is deployed.
      function XBLToken() 
      {
         owner = msg.sender;
