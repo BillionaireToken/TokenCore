@@ -3,16 +3,16 @@ pragma solidity ^0.4.8;
 /* Billionaire Token (XBL) source code. */
   
  contract XBLToken {
-    // Triggered when tokens are transferred.
+    /* Triggered when tokens are transferred. */
     event Transfer(address indexed _from, address indexed _to, uint256 _value);
   
-    // Triggered whenever approve(address _spender, uint256 _value) is called.
+    /* Triggered whenever approve(address _spender, uint256 _value) is called. */
     event Approval(address indexed _owner, address indexed _spender, uint256 _value);
 
     /* This notifies clients about the XBL amount burned */
     event Burn(address indexed from, uint256 value);
     
-    // And we begin:
+    /* And we begin: */
     string public constant symbol = "XBL";
     string public constant name = "Billionaire Token";
     uint8 public constant decimals = 18;
@@ -28,7 +28,7 @@ pragma solidity ^0.4.8;
     /* Owner of account can approve (allow) the transfer of an amount to another account */
     mapping(address => mapping (address => uint256)) allowed;
   
-     // Constructor, this function only gets called once, when the contract is deployed.
+     /* Constructor, this function only gets called once, when the contract is deployed. */
      function XBLToken() 
      {
         owner = msg.sender;
@@ -87,8 +87,11 @@ pragma solidity ^0.4.8;
          }
      }
   
-     // Allow _spender to withdraw from your account, multiple times, up to the _value amount.
-     // If this function is called again it overwrites the current allowance with _value.
+     /* 
+        Allow _spender to withdraw from your account, multiple times, up to the _value amount. 
+          If this function is called again it overwrites the current allowance with _value.
+     */
+     
      function approve(address _spender, uint256 _amount) returns (bool success) 
      {
         allowed[msg.sender][_spender] = _amount;
@@ -96,12 +99,13 @@ pragma solidity ^0.4.8;
         return true;
      }
   
-     /* Is the _spender allowed to spend on the behalf of the _owner? */ 
+     /* Is the _spender allowed to spend on the behalf of _owner? */ 
      function allowance(address _owner, address _spender) constant returns (uint256 remaining) 
      {
         return allowed[_owner][_spender];
      }
-
+    
+    /* Burn :) */
     function burn(uint256 _value) returns (bool success) 
     {
         if (balances[msg.sender] < _value) throw;            // Check if the sender has enough
