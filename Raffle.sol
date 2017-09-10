@@ -313,15 +313,8 @@ contract BillionaireTokenRaffle
 	{
 		/* 
 				Use a sort of a pop() function that will delete all the addresses of 
-					the winners from the mapping (so that they can't be chosen again)
-
-				Function that loops three times to find the three winners of the week.
-					It will generate a random number between raffle_bowl start value and raffle_bowl end value 
-					(and will remember this number so that it's not chosen again)
-					Every time a winner is found they are discarded from the array, and the loop continues.\
-
-				1. Find the winners in the while loop.
-				2. Delete their other entries from the mapping
+					the winners from the mapping (so that they can't be chosen again
+				We also need to delete their other entries from the mapping
 		    	3. Check how much they should win
 		    	4. Use transfer() function to give them their coins
 		    	5. Call burnTenPercent()
