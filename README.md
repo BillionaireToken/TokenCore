@@ -30,7 +30,7 @@ Assuming the price of one ticket is 20 XBL, then the user must call registerTick
 
 Now you're in. You've just registered a ticket to the raffle. You have the chance to become the grand winner!
 
-All of this might seem just a tad bit complicated for your average gambler. But not for the cryptohead.
+All of this is easy for a cryptohread but might seem just a tad bit complicated for your average gambler.
 
 We will be aiming to go mainstream with Billionaire Token and as such we will develop a GUI to be used in conjunction with the Raffle and the Burner .
 This GUI will use Metamask and will be usable through our website initially. We will also be looking into developing stand-alone clients.
