@@ -17,13 +17,13 @@ After this, users must call registerTickets() function on the Raffle Contract Ad
 Example:
 
 
-  function approve(address _spender, uint256 _amount) returns (bool success) 
+  **function approve(address _spender, uint256 _amount) returns (bool success)**
 
 
 So the user will first call approve(RAFFLE_ADDRESS, 20000000000000000000) on the XBL Contract Address. They have just approved the Raffle to spend 20 XBL (+18 zeroes) on their behalf.
 
 
-  function registerTickets(uint256 number_of_tickets) returns (int8 registerTickets_STATUS)
+  **function registerTickets(uint256 number_of_tickets) returns (int8 registerTickets_STATUS)**
 
 
 Assuming the price of one ticket is 20 XBL, then the user must call registerTickets(20) on the Raffle Contract Address.
