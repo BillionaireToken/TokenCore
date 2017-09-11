@@ -118,7 +118,7 @@ contract BillionaireTokenRaffle
 	function setTicketPrice(uint256 _ticket_price) onlyOwner
 	{
 		   /*   Only the owner may or may not be able to change ticket price.  */
-		  /*   Should this needs to be put to a vote?                         */
+		  /*   Should this be put to a vote?                                  */
 		 /*   Should the ticket price always be fixed?                       */
 		/*   We can always update the Raffle.                               */
 		ticket_price = _ticket_price;
