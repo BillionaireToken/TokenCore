@@ -5,13 +5,12 @@ This is the github page for Billionaire Token: A super, deflationary gambling or
 Main components:
 
 1. The Coin: Billionaire Token (XBL): 
-------------------------------------
-A standard ERC-20 token with a burn() function. No minting is allowed.
 
+A standard ERC-20 token with a burn() function. No minting is allowed.
+------------------------------------
 
 
 2. The weekly "Become a Billionaire" decentralized raffle:
----------------------------------------------------------
 
 The Raffle works in the following way: Users must first call approve() on the XBL Contract Address allowing the Raffle to spend tokens on their behalf.
 After this, users must call registerTickets() function on the Raffle Contract Address with the number of tickets they want to register.
