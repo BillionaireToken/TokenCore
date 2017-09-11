@@ -63,7 +63,7 @@ contract BillionaireTokenRaffle
 	mapping(uint256 => address) public raffle_bowl; 
 												
 	mapping(uint256 => bytes32) public weekly_burns;     
-	mapping (address => uint256) address_to_tickets;
+	mapping(address => uint256) address_to_tickets;
 
 	 /* This function will generate a random number between 0 and upper_limit-1  */
 	/* Random number generators in Ethereum Smart Contracts are deterministic   */
@@ -89,7 +89,7 @@ contract BillionaireTokenRaffle
 
 		raffle_bowl_counter = 0; /* This is the key for the raffle_bowl mapping         */
 		current_winner_set = 0; /* [0] - No winners are set; [1] - First winner set;   */
-							   /* [2] - First two winners set; [3] - All winners set. */
+				       /* [2] - First two winners set; [3] - All winners set. */
 		minutes_in_a_week = 10080;
 
 		next_week = now + minutes_in_a_week * 1 minutes; /* Will get set every time resetRaffle() is called */
@@ -145,20 +145,20 @@ contract BillionaireTokenRaffle
 	}
 
 	function getPercent(uint8 percent, uint256 number) returns (uint256 result)
-    {
+    	{
         return number * percent / 100;
-    }
+    	}
 
 	function resetRaffle() returns (int8 resetRaffle_STATUS)
 	{
 		/*
-				STATUS CODES:
+			STATUS CODES:
 
-				[-2] - getNextWinner() error.
-				[-1] - We have no participants.
-				[0 ] - ALL OK.
-				[1 ] - Only one winner, was refunded.
-				[2 ] - Two winners were refunded.
+			[-2] - getNextWinner() error.
+			[-1] - We have no participants.
+			[0 ] - ALL OK.
+			[1 ] - Only one winner, was refunded.
+			[2 ] - Two winners were refunded.
 		*/
 
 		while (now >= next_week)
