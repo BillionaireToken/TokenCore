@@ -2,7 +2,7 @@
 
 ### This is the github page for Billionaire Token: A super, deflationary gambling oriented, ERC-20 Ethereum token.
 
-### Main components:
+## Main components:
 
 ### 1. The Coin: Billionaire Token (XBL): 
 
