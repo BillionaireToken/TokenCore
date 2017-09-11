@@ -1,12 +1,25 @@
 # Simple python script used to calculate the amount of XBL associated with a purchase in BTC, ETH and LTC
-# v.01 by Gluedog
-# Next version will use the Coinmarketcap API to grab prices automatically so we won't have to hardcode them.
+# v.02
 
-btc_price = 4572.78
-eth_price = 389.07  
-ltc_price = 61.06
-current_bonus = "70"
+import urllib, json
 
+current_bonus = "50"
+
+BTC_url = "https://api.coinmarketcap.com/v1/ticker/bitcoin/"
+LTC_url = "https://api.coinmarketcap.com/v1/ticker/litecoin/"
+ETH_url = "https://api.coinmarketcap.com/v1/ticker/ethereum/"
+
+btc_response = urllib.urlopen(BTC_url)
+btc_data = json.loads(btc_response.read())
+btc_price = float(btc_data[0]["price_usd"])
+
+eth_response = urllib.urlopen(ETH_url)
+eth_data = json.loads(eth_response.read())
+eth_price = float(eth_data[0]["price_usd"])
+
+ltc_response = urllib.urlopen(LTC_url)
+ltc_data = json.loads(ltc_response.read())
+ltc_price = float(ltc_data[0]["price_usd"])
 
 while True:
     choice = raw_input("1). LTC\n2). BTC\n3). ETH\n>> ")
