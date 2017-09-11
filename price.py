@@ -1,5 +1,6 @@
 # Simple python script used to calculate the amount of XBL associated with a purchase in BTC, ETH and LTC
 # v.02
+# ~by Gluedog
 
 import urllib, json
 
