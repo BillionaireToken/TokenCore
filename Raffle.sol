@@ -22,6 +22,15 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
 | completely different by the time the first versions are deployed. |
 +-------------------------------------------------------------------+
 
+
+
+1. Find the winners in the while loop. - CHECK (TEST!)
+2. Delete their other entries from the mapping - CHECK (TEST!)
+3. Check how much they should win - CHECK (TEST!)
+4. Use transfer() function to give them their coins - CHECK (TEST!)
+5. Call burnTenPercent() - CHECK (TEST!)
+6. Use transfer() to give the remaining (20%) of the coins to the burner_addr - Need a burner.
+
 */
 pragma solidity ^0.4.0;
 contract XBL_ERC20Wrapper
@@ -63,6 +72,8 @@ contract BillionaireTokenRaffle
 	mapping(uint256 => address) public raffle_bowl; 						
 	mapping(uint256 => bytes32) public weekly_burns;     
 	mapping(address => uint256) address_to_tickets;
+
+	uint8[] random_numbers; /* Remember the random numbers used inside getNextWinner */ 
 
 	 /* This function will generate a random number between 0 and upper_limit-1  */
 	/* Random number generators in Ethereum Smart Contracts are deterministic   */
@@ -144,6 +155,9 @@ contract BillionaireTokenRaffle
 		winner_2 = 0x0;
 		winner_3 = 0x0;
 		clearAddressMappings();
+		random_numbers = 0;
+		// Check if the addresses were cleared correctly.
+		return success;
 	}
 
 	function clearAddressMappings() returns (bool success)
@@ -161,7 +175,7 @@ contract BillionaireTokenRaffle
 		uint16 counter = 0;
 		while (true)
 		{
-			address_to_tickets[raffle_bowl[counter]] = 0; // Test this syntax
+			address_to_tickets[raffle_bowl[counter]] = 0;
 			raffle_bowl[counter] = 0x0;
 
 			if (counter == raffle_bowl_counter)
@@ -179,7 +193,7 @@ contract BillionaireTokenRaffle
 		{
 			if (raffle_bowl[i] == winner_addr)
 				raffle_bowl[i] = 0x0;
-			// Make sure this doesn't screw up the mapping and leave gaps.
+			// Make sure this doesn't screw up the mapping and leave gaps!
 		}
 		return success;
 	}
@@ -193,14 +207,14 @@ contract BillionaireTokenRaffle
 	}
 
 	function getPercent(uint8 percent, uint256 number) returns (uint256 result)
-    	{
-        return number * percent / 100;
-    	}
+	{	// Whatever
+		return number * percent / 100;
+	}
 
 	function resetRaffle() returns (int8 resetRaffle_STATUS)
 	{
 		/*
-				STATUS CODES:
+				resetRaffle STATUS CODES:
 
 				[-2] - getNextWinner() error.
 				[-1] - We have no participants.
@@ -264,7 +278,6 @@ contract BillionaireTokenRaffle
 				{
 					/* Three winners, proceed with rewards. */
 					raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
-					raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
 					uint256 p1_reward = getPercent(40, raffle_balance);
 					uint256 p2_reward = getPercent(20, raffle_balance);
 					uint256 p3_reward = getPercent(10, raffle_balance);
@@ -286,8 +299,9 @@ contract BillionaireTokenRaffle
 	function registerTickets(uint256 number_of_tickets) returns (int8 registerTickets_STATUS)
 	{
 		/*
-				STATUS CODES:
+				registerTickets STATUS CODES:
 
+				[-3] - getNextWinner() fail, raised error.
 				[-2] - ACTUAL ALLOWANCE CHECK MISMATCH.
 				[-1] - INVALID INPUT (zero or too many tickets).
 				[0 ] - REGISTERED OK.
@@ -311,10 +325,15 @@ contract BillionaireTokenRaffle
 
 			*/
 
+			if (RAFFLE_STATUS == -2)
+			{
+				/* getNextWinner() errored, raise it!*/
+				return -3;
+			}
 		}
 		   /* Before users will call registerTickets function,                          */
 		  /* they will first have to call approve() on the XBL contract address        */
-		 /* and approve the burner to spend tokens on their behalf.                   */
+		 /* and approve the Raffle to spend tokens on their behalf.                   */
 		/* After they have called approve, they will have to call registerTickets()  */ 
 
 	  	/* Check for invalid inputs:                       */
@@ -367,20 +386,10 @@ contract BillionaireTokenRaffle
 	function getNextWinner() returns (address next_winner)
 	{
 		/* 
-				Use a sort of a pop() function that will delete all the addresses of 
-					the winners from the mapping (so that they can't be chosen again)
-
-				Function that loops three times to find the three winners of the week.
+				Function that returns the next winner.
 					It will generate a random number between raffle_bowl start value and raffle_bowl end value 
 					(and will remember this number so that it's not chosen again)
-					Every time a winner is found they are discarded from the array, and the loop continues.\
-
-				1. Find the winners in the while loop.
-				2. Delete their other entries from the mapping
-		    	3. Check how much they should win
-		    	4. Use transfer() function to give them their coins
-		    	5. Call burnTenPercent()
-		    	6. Use transfer() to give the remaining (20%) of the coins to the burner_addr
+					Every time a winner is found they are discarded from the array, and the loop continues.
 		*/
 		if (current_winner_set == 3)
 			return 0x0;
