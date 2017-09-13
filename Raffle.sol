@@ -144,8 +144,6 @@ contract BillionaireTokenRaffle
 		winner_2 = 0x0;
 		winner_3 = 0x0;
 		clearAddressMappings();
-		//address_to_tickets[0] to address_to_tickets[final_nr] = 0x0, "0" etc.
-		// Wtf do we do with address_to_tickets - is it used for anything?
 	}
 
 	function clearAddressMappings() returns (bool success)
