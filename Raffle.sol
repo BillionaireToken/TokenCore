@@ -193,9 +193,9 @@ contract BillionaireTokenRaffle
 	}
 
 	function getPercent(uint8 percent, uint256 number) returns (uint256 result)
-    {
+    	{
         return number * percent / 100;
-    }
+    	}
 
 	function resetRaffle() returns (int8 resetRaffle_STATUS)
 	{
