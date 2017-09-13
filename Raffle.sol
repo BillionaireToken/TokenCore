@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.07, pre-release.
+The "Become a Billionaire" decentralized Raffle v0.08, pre-release.
 ~by Gluedog
 -----------
 
@@ -60,8 +60,7 @@ contract BillionaireTokenRaffle
 	/*   The raffle_bowl is a mapping between an (ever increasing) int and an address.  */
 	/*   The raffle_bowl gets reset every week.                                         */
 	/*   This needs to be made un-public when the Raffle is deployed for security.      */
-	mapping(uint256 => address) public raffle_bowl; 
-												
+	mapping(uint256 => address) public raffle_bowl; 						
 	mapping(uint256 => bytes32) public weekly_burns;     
 	mapping(address => uint256) address_to_tickets;
 
@@ -75,7 +74,7 @@ contract BillionaireTokenRaffle
 
 	function BillionaireTokenRaffle()
 	{
-                            /* Billionaire Token contract address */
+                                    /* Billionaire Token contract address */
 		XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
 		ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
 
@@ -89,13 +88,13 @@ contract BillionaireTokenRaffle
 
 		raffle_bowl_counter = 0; /* This is the key for the raffle_bowl mapping         */
 		current_winner_set = 0; /* [0] - No winners are set; [1] - First winner set;   */
-				       /* [2] - First two winners set; [3] - All winners set. */
+							   /* [2] - First two winners set; [3] - All winners set. */
 		minutes_in_a_week = 10080;
 
 		next_week = now + minutes_in_a_week * 1 minutes; /* Will get set every time resetRaffle() is called */
 		current_week = 0; /* Starts at week 0 */
 
-		total_supply = ERC20_CALLS.totalSupply();
+		total_supply = ERC20_CALLS.totalSupply(); /* The whole contract will fail when deployed in a VM if this line isn't commented out. */
 		rt_upper_limit = total_supply / ticket_price;
 	}
 
@@ -117,8 +116,7 @@ contract BillionaireTokenRaffle
 
 	function setTicketPrice(uint256 _ticket_price) onlyOwner
 	{
-		   /*   Only the owner may or may not be able to change ticket price.  */
-		  /*   Should this be put to a vote?                                  */
+		  /*   Only the owner may or may not be able to change ticket price.  */
 		 /*   Should the ticket price always be fixed?                       */
 		/*   We can always update the Raffle.                               */
 		ticket_price = _ticket_price;
@@ -133,7 +131,59 @@ contract BillionaireTokenRaffle
 
 	function resetWeeklyVars() returns (bool success)
 	{
-		/* raffle_bowl, address_to_tickets, current_winner_set.... */
+		/* 
+		After the weekly vars have been been reset, the player that last 
+		registered (if this gets called from registerTickets()) will have 
+		to have his tickets added to next week's Raffle Bowl.
+		*/
+
+		total_supply = ERC20_CALLS.totalSupply(); // This has to be called after we have burned the 10%.
+		raffle_bowl_counter = 0;
+		current_winner_set = 0;
+		winner_1 = 0x0;
+		winner_2 = 0x0;
+		winner_3 = 0x0;
+		clearAddressMappings();
+		//address_to_tickets[0] to address_to_tickets[final_nr] = 0x0, "0" etc.
+		// Wtf do we do with address_to_tickets - is it used for anything?
+	}
+
+	function clearAddressMappings() returns (bool success)
+	{
+		/*
+			This function clears address_to_tickets and raffle_bowl.
+
+		This will also have to clear address_to_tickets, I think the 
+		only way to actually find the keys is to use the raffle_bowl. 
+
+			Check maybe we need to implement a different way to store this data, 
+		like an array or something, because the mappings may get way too big 
+		and cost a lot of gas, or have a lot of overhead.
+		*/
+		uint16 counter = 0;
+		while (true)
+		{
+			address_to_tickets[raffle_bowl[counter]] = 0; // Test this syntax
+			raffle_bowl[counter] = 0x0;
+
+			if (counter == raffle_bowl_counter)
+				return true;
+			
+			counter++;
+		}
+	}
+
+	function clearAddressRaffleBowl(address winner_addr) returns (bool success)
+	{
+		/* This function iterates through the raffle bowl mapping 
+		   and removes all the entries with a specific address. */
+		for (uint16 i = 0; i <= raffle_bowl_counter; i++)
+		{
+			if (raffle_bowl[i] == winner_addr)
+				raffle_bowl[i] = 0x0;
+			// Make sure this doesn't screw up the mapping and leave gaps.
+		}
+		return success;
 	}
 
 	function getPlayerStake(address player) returns (uint256 stake)
@@ -145,20 +195,20 @@ contract BillionaireTokenRaffle
 	}
 
 	function getPercent(uint8 percent, uint256 number) returns (uint256 result)
-    	{
+    {
         return number * percent / 100;
-    	}
+    }
 
 	function resetRaffle() returns (int8 resetRaffle_STATUS)
 	{
 		/*
-			STATUS CODES:
+				STATUS CODES:
 
-			[-2] - getNextWinner() error.
-			[-1] - We have no participants.
-			[0 ] - ALL OK.
-			[1 ] - Only one winner, was refunded.
-			[2 ] - Two winners were refunded.
+				[-2] - getNextWinner() error.
+				[-1] - We have no participants.
+				[0 ] - ALL OK.
+				[1 ] - Only one winner, was refunded.
+				[2 ] - Two winners were refunded.
 		*/
 
 		while (now >= next_week)
@@ -190,7 +240,8 @@ contract BillionaireTokenRaffle
 				/* We have just one winner, refund him the tokens, reset variables */
 				raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
 				ERC20_CALLS.transfer(winner_1, raffle_balance);
-
+				resetWeeklyVars();
+				
 				return 1;
 			}
 			else
@@ -207,15 +258,21 @@ contract BillionaireTokenRaffle
 					uint256 p2_stake = getPlayerStake(winner_2);
 					ERC20_CALLS.transfer(winner_2, p2_stake);
 
+					resetWeeklyVars();
+
 					return 2;
 				}
 				else
 				{
 					/* Three winners, proceed with rewards. */
 					raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
+					raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
 					uint256 p1_reward = getPercent(40, raffle_balance);
 					uint256 p2_reward = getPercent(20, raffle_balance);
 					uint256 p3_reward = getPercent(10, raffle_balance);
+					ERC20_CALLS.transfer(winner_1, p1_reward);
+					ERC20_CALLS.transfer(winner_2, p2_reward);
+					ERC20_CALLS.transfer(winner_3, p3_reward);
 					burnTenPercent(raffle_balance);
 
 					/* Reset variables. */
@@ -286,7 +343,7 @@ contract BillionaireTokenRaffle
   		uint256 _ticket_number = number_of_tickets;
   		while (_ticket_number > 0)
   		{
-  			raffle_bowl[raffle_bowl_counter] = msg.sender;
+  			raffle_bowl[raffle_bowl_counter] = user_addr;
   			raffle_bowl_counter += 1;
   			_ticket_number -= 1;
   		}
@@ -313,8 +370,15 @@ contract BillionaireTokenRaffle
 	{
 		/* 
 				Use a sort of a pop() function that will delete all the addresses of 
-					the winners from the mapping (so that they can't be chosen again
-				We also need to delete their other entries from the mapping
+					the winners from the mapping (so that they can't be chosen again)
+
+				Function that loops three times to find the three winners of the week.
+					It will generate a random number between raffle_bowl start value and raffle_bowl end value 
+					(and will remember this number so that it's not chosen again)
+					Every time a winner is found they are discarded from the array, and the loop continues.\
+
+				1. Find the winners in the while loop.
+				2. Delete their other entries from the mapping
 		    	3. Check how much they should win
 		    	4. Use transfer() function to give them their coins
 		    	5. Call burnTenPercent()
@@ -328,6 +392,7 @@ contract BillionaireTokenRaffle
 		if (current_winner_set == 0)
 		{
 			address _winner_1 = raffle_bowl[_rand];
+			clearAddressRaffleBowl(_winner_1);
 			return _winner_1;
 		}
 
@@ -335,18 +400,24 @@ contract BillionaireTokenRaffle
 		{
 			address _winner_2 = raffle_bowl[_rand];
 			if ((_winner_2 == 0x0) || (_winner_2 == _winner_1))
-				return 0x0;
+				return 0x0; // Huge error!
 			else
+			{
+				clearAddressRaffleBowl(_winner_2);
 				return _winner_2;
+			}
 		}
 
 		if (current_winner_set == 2)
 		{
 			address _winner_3 = raffle_bowl[_rand];
 			if ((_winner_3 == 0x0) || (_winner_3 == _winner_2) || (_winner_3 == _winner_1))
-				return 0x0;
+				return 0x0; // Huge error!
 			else
+			{
+				clearAddressRaffleBowl(_winner_3);
 				return _winner_3;
+			}
 		}
 	}
 
@@ -366,13 +437,29 @@ contract BillionaireTokenRaffle
 		return ERC20_CALLS.totalSupply();
 	}
 
-	function demoPopulateVariables1()
+	function demoPopulateVariables0_OneRegistrant()
 	{
-		/* Populate the variables as if raffle had been going on for a while */
+		/* Populate the variables as if raffle just had one registrant - normally it should return his balance. */
+		raffle_bowl_counter[0] = msg.sender;
 	}
 
-	function demoPopulateVariables2()
+	function demoPopulateVariables1_TwoRegistrants(address extra_winner)
 	{
-		/* Populate the variables as if raffle had been going on for a while */
+		/* Populate the variables as if raffle just had two registrant - normally it should return their balance. */
+		raffle_bowl_counter[0] = msg.sender;
+		raffle_bowl_counter[1] = extra_winner;
+	}
+
+	function demoPopulateVariables2_ThreeWinners(address extra_winner_0, address extra_winner_1)
+	{
+		/* Populate the variables as if raffle had been going on for a while and we have a bunch of entries in the raffle_bowl. */
+		raffle_bowl_counter[0] = msg.sender;
+		raffle_bowl_counter[1] = extra_winner_0;
+		raffle_bowl_counter[2] = extra_winner_1;
+	}
+
+	function testPopulateAndClearAddressMappings()
+	{
+		/* First populate address_to_tickets and raffle_bowl, then call clearAddressMappings to test if they get properly reset */
 	}
 }
