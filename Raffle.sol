@@ -64,6 +64,7 @@ contract BillionaireTokenRaffle
 	uint256 raffle_balance;
 	uint256 total_supply;
 	uint256 rt_upper_limit; /* registerTickets() upper ticket limit */
+	uint8 random_number_counter;
 	XBL_ERC20Wrapper ERC20_CALLS;
 
 	/*   The raffle_bowl is a mapping between an (ever increasing) int and an address.  */
@@ -96,6 +97,7 @@ contract BillionaireTokenRaffle
 		ticket_price = 20000000000000000000; /* 20 XBL                                                           */
 		total_burned_by_raffle = 0; /* A variable that keeps track of how many tokens were burned by the raffle */
 		raffle_balance = 0;
+		random_number_counter = 0;
 
 		raffle_bowl_counter = 0; /* This is the key for the raffle_bowl mapping         */
 		current_winner_set = 0; /* [0] - No winners are set; [1] - First winner set;   */
@@ -163,14 +165,14 @@ contract BillionaireTokenRaffle
 	function clearAddressMappings() returns (bool success)
 	{
 		/*
-			This function clears address_to_tickets and raffle_bowl.
+		This function clears address_to_tickets and raffle_bowl.
 
-		This will also have to clear address_to_tickets, I think the 
-		only way to actually find the keys is to use the raffle_bowl. 
+		  This will also have to clear address_to_tickets, I think the 
+		  only way to actually find the keys is to use the raffle_bowl. 
 
-			Check maybe we need to implement a different way to store this data, 
-		like an array or something, because the mappings may get way too big 
-		and cost a lot of gas, or have a lot of overhead.
+		Check maybe we need to implement a different way to store this data, 
+		  like an array or something, because the mappings may get way too big 
+		  and cost a lot of gas, or have a lot of overhead.
 		*/
 		uint16 counter = 0;
 		while (true)
@@ -214,13 +216,13 @@ contract BillionaireTokenRaffle
 	function resetRaffle() returns (int8 resetRaffle_STATUS)
 	{
 		/*
-				resetRaffle STATUS CODES:
+			resetRaffle STATUS CODES:
 
-				[-2] - getNextWinner() error.
-				[-1] - We have no participants.
-				[0 ] - ALL OK.
-				[1 ] - Only one winner, was refunded.
-				[2 ] - Two winners were refunded.
+			[-2] - getNextWinner() error.
+			[-1] - We have no participants.
+			[0 ] - ALL OK.
+			[1 ] - Only one winner, was refunded.
+			[2 ] - Two winners were refunded.
 		*/
 
 		while (now >= next_week)
@@ -233,6 +235,7 @@ contract BillionaireTokenRaffle
 		{
 			/* We have no winners.               */
 			/* Reset the rest of the stats here */
+			resetWeeklyVars();
 			return -1;
 		}
 
@@ -299,14 +302,14 @@ contract BillionaireTokenRaffle
 	function registerTickets(uint256 number_of_tickets) returns (int8 registerTickets_STATUS)
 	{
 		/*
-				registerTickets STATUS CODES:
+			registerTickets STATUS CODES:
 
-				[-3] - getNextWinner() fail, raised error.
-				[-2] - ACTUAL ALLOWANCE CHECK MISMATCH.
-				[-1] - INVALID INPUT (zero or too many tickets).
-				[0 ] - REGISTERED OK.
-				[1 ] - N/A
-				[2 ] - N/A
+			[-3] - getNextWinner() fail, raised error.
+			[-2] - ACTUAL ALLOWANCE CHECK MISMATCH.
+			[-1] - INVALID INPUT (zero or too many tickets).
+			[0 ] - REGISTERED OK.
+			[1 ] - N/A
+			[2 ] - N/A
 		*/
 
 		// Check the time:
@@ -386,15 +389,18 @@ contract BillionaireTokenRaffle
 	function getNextWinner() returns (address next_winner)
 	{
 		/* 
-				Function that returns the next winner.
-					It will generate a random number between raffle_bowl start value and raffle_bowl end value 
-					(and will remember this number so that it's not chosen again)
-					Every time a winner is found they are discarded from the array, and the loop continues.
+		Function that returns the next winner.
+		    It will generate a random number between raffle_bowl start value and raffle_bowl end value 
+		    (and will remember this number so that it's not chosen again)
+		    Every time a winner is found they are discarded from the array, and the loop continues.
 		*/
 		if (current_winner_set == 3)
 			return 0x0;
 
 		uint256 _rand = getRand(raffle_bowl_counter+1);
+		for (uint8 i = 0; );
+		random_numbers[random_number_counter] = _rand;
+		random_number_counter += 1;
 
 		if (current_winner_set == 0)
 		{
@@ -447,22 +453,25 @@ contract BillionaireTokenRaffle
 	function demoPopulateVariables0_OneRegistrant()
 	{
 		/* Populate the variables as if raffle just had one registrant - normally it should return his balance. */
-		raffle_bowl_counter[0] = msg.sender;
+		raffle_bowl[0] = msg.sender;
+		raffle_bowl_counter += 1;
 	}
 
 	function demoPopulateVariables1_TwoRegistrants(address extra_winner)
 	{
 		/* Populate the variables as if raffle just had two registrant - normally it should return their balance. */
-		raffle_bowl_counter[0] = msg.sender;
-		raffle_bowl_counter[1] = extra_winner;
+		raffle_bowl[0] = msg.sender;
+		raffle_bowl[1] = extra_winner;
+		raffle_bowl_counter += 2;
 	}
 
 	function demoPopulateVariables2_ThreeWinners(address extra_winner_0, address extra_winner_1)
 	{
 		/* Populate the variables as if raffle had been going on for a while and we have a bunch of entries in the raffle_bowl. */
-		raffle_bowl_counter[0] = msg.sender;
-		raffle_bowl_counter[1] = extra_winner_0;
-		raffle_bowl_counter[2] = extra_winner_1;
+		raffle_bowl[0] = msg.sender;
+		raffle_bowl[1] = extra_winner_0;
+		raffle_bowl[2] = extra_winner_1;
+		raffle_bowl_counter += 3;
 	}
 
 	function testPopulateAndClearAddressMappings()
