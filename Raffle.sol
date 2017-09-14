@@ -99,7 +99,7 @@ contract BillionaireTokenRaffle
 
 		raffle_bowl_counter = 0; /* This is the key for the raffle_bowl mapping         */
 		current_winner_set = 0; /* [0] - No winners are set; [1] - First winner set;   */
-							   /* [2] - First two winners set; [3] - All winners set. */
+				       /* [2] - First two winners set; [3] - All winners set. */
 		minutes_in_a_week = 10080;
 
 		next_week = now + minutes_in_a_week * 1 minutes; /* Will get set every time resetRaffle() is called */
