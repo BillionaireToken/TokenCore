@@ -454,6 +454,8 @@ contract BillionaireTokenRaffle
 		/* Populate the variables as if raffle just had one registrant - normally it should return his balance. */
 		raffle_bowl[0] = msg.sender;
 		raffle_bowl_counter += 1;
+
+		address_to_tickets[msg.sender] = 1;
 	}
 
 	function demoPopulateVariables1_TwoRegistrants(address extra_winner)
@@ -462,6 +464,9 @@ contract BillionaireTokenRaffle
 		raffle_bowl[0] = msg.sender;
 		raffle_bowl[1] = extra_winner;
 		raffle_bowl_counter += 2;
+
+		address_to_tickets[msg.sender] = 1;
+		address_to_tickets[extra_winner_0] = 1;
 	}
 
 	function demoPopulateVariables2_ThreeWinners(address extra_winner_0, address extra_winner_1)
@@ -471,6 +476,10 @@ contract BillionaireTokenRaffle
 		raffle_bowl[1] = extra_winner_0;
 		raffle_bowl[2] = extra_winner_1;
 		raffle_bowl_counter += 3;
+
+		address_to_tickets[msg.sender] = 1;
+		address_to_tickets[extra_winner_0] = 1;
+		address_to_tickets[extra_winner_1] = 1;
 	}
 
 	function testPopulateAndClearAddressMappings()
