@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.08, pre-release.
+The "Become a Billionaire" decentralized Raffle v0.8.5, pre-release.
 ~by Gluedog
 -----------
 
@@ -64,7 +64,7 @@ contract BillionaireTokenRaffle
 	uint256 raffle_balance;
 	uint256 total_supply;
 	uint256 rt_upper_limit; /* registerTickets() upper ticket limit */
-	uint8 random_number_counter;
+	uint256 random_number_counter;
 	XBL_ERC20Wrapper ERC20_CALLS;
 
 	/*   The raffle_bowl is a mapping between an (ever increasing) int and an address.  */
@@ -74,7 +74,7 @@ contract BillionaireTokenRaffle
 	mapping(uint256 => bytes32) public weekly_burns;     
 	mapping(address => uint256) address_to_tickets;
 
-	uint8[] random_numbers; /* Remember the random numbers used inside getNextWinner */ 
+	uint256[] random_numbers; /* Remember the random numbers used inside getNextWinner */ 
 
 	 /* This function will generate a random number between 0 and upper_limit-1  */
 	/* Random number generators in Ethereum Smart Contracts are deterministic   */
@@ -157,7 +157,7 @@ contract BillionaireTokenRaffle
 		winner_2 = 0x0;
 		winner_3 = 0x0;
 		clearAddressMappings();
-		random_numbers = 0;
+		random_numbers.length = 0;
 		// Check if the addresses were cleared correctly.
 		return success;
 	}
@@ -398,7 +398,6 @@ contract BillionaireTokenRaffle
 			return 0x0;
 
 		uint256 _rand = getRand(raffle_bowl_counter+1);
-		for (uint8 i = 0; );
 		random_numbers[random_number_counter] = _rand;
 		random_number_counter += 1;
 
