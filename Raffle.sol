@@ -115,10 +115,10 @@ contract BillionaireTokenRaffle
 	  /* This is very useful in cases where one would like to upgrade the deflationary algorithm.   */
 	 /* We can simple use setter functions on the "Burner address",                                */
 	/* so that if we update the Burner, we can just point the Raffle to the new version of it.    */
-    modifier onlyOwner() 
-    {
-    	require (msg.sender == owner_addr);
-    	_;
+    	modifier onlyOwner() 
+   	{
+    		require (msg.sender == owner_addr);
+    		_;
   	}
 	
 	function setBurnerAddress(address _burner_addr) onlyOwner
