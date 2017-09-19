@@ -35,7 +35,7 @@ All of this is easy for a cryptohead but might seem just a tad bit complicated f
 We will be aiming to go mainstream with Billionaire Token and as such we will develop a GUI to be used in conjunction with the Raffle and the Burner .
 This GUI will use Metamask and will be usable through our website initially. We will also be looking into developing stand-alone clients.
 
-Basically, people will play the Raffle, play with the Burner, play Poker and not even know they're on a blockchain! 
+People will play the Raffle, play with the Burner, play Poker and not even know they're on a blockchain! 
 It will be gambling for the masses with all the benefits that crypto currencies and blockchain technology brings: accountability, traceability and security.
 
 
