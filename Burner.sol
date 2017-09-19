@@ -37,9 +37,9 @@ contract TheBurner
 	address raffle_addr;
 
 	modifier onlyOwner() 
-    {
-    	require (msg.sender == owner_addr);
-    	_;
+    	{
+    		require (msg.sender == owner_addr);
+    		_;
   	}
 
   	function setRaffleAddress(address _raffle_addr) onlyOwner
