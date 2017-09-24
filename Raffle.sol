@@ -333,7 +333,7 @@ contract BillionaireTokenRaffle
 				/* getNextWinner() errored, raise it!*/
 				return -3;
 			}
-		}
+		  }
 		   /* Before users will call registerTickets function,                          */
 		  /* they will first have to call approve() on the XBL contract address        */
 		 /* and approve the Raffle to spend tokens on their behalf.                   */
@@ -458,11 +458,11 @@ contract BillionaireTokenRaffle
 		address_to_tickets[msg.sender] = 1;
 	}
 
-	function demoPopulateVariables1_TwoRegistrants(address extra_winner)
+	function demoPopulateVariables1_TwoRegistrants(address extra_winner_0)
 	{
 		/* Populate the variables as if raffle just had two registrant - normally it should return their balance. */
 		raffle_bowl[0] = msg.sender;
-		raffle_bowl[1] = extra_winner;
+		raffle_bowl[1] = extra_winner_0;
 		raffle_bowl_counter += 2;
 
 		address_to_tickets[msg.sender] = 1;
