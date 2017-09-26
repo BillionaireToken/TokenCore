@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.8.6, pre-release.
+The "Become a Billionaire" decentralized Raffle v0.8.5, pre-release.
 ~by Gluedog
 -----------
 
@@ -88,7 +88,7 @@ contract BillionaireTokenRaffle
 
     /* This function will generate a random number between 0 and upper_limit-1  */
     /* Random number generators in Ethereum Smart Contracts are deterministic   */
-    function public getRand(uint256 upper_limit) returns (uint256 random_number)
+    function getRand(uint256 upper_limit) public returns (uint256 random_number)
     {
         /* This will have to be replaced with something less predictable.    */
         return uint(block.blockhash(block.number-1)) % upper_limit;
@@ -127,19 +127,19 @@ contract BillionaireTokenRaffle
     /* This is very useful in cases where one would like to upgrade the deflationary algorithm.   */
     /* We can simple use setter functions on the "Burner address",                                */
     /* so that if we update the Burner, we can just point the Raffle to the new version of it.    */
-    modifier public onlyOwner()
+    modifier onlyOwner()
     {
         require (msg.sender == owner_addr);
         _;
     }
 
-    function public setBurnerAddress(address _burner_addr) onlyOwner
+    function setBurnerAddress(address _burner_addr) public onlyOwner
     {
         /* Only the owner can set the burner address. */
         burner_addr = _burner_addr;
     }
 
-    function public setTicketPrice(uint256 _ticket_price) onlyOwner
+    function setTicketPrice(uint256 _ticket_price) public onlyOwner
     {
         /*   Only the owner may or may not be able to change ticket price.  */
         /*   Should the ticket price always be fixed?                       */
@@ -147,14 +147,14 @@ contract BillionaireTokenRaffle
         ticket_price = _ticket_price;
     }
 
-    function public setOwnerAddr(address _owner_addr) onlyOwner
+    function setOwnerAddr(address _owner_addr) public onlyOwner
     {
         /* The owner can change the owner. */
         /* Because he's the owner          */
         owner_addr = _owner_addr;
     }
 
-    function public resetWeeklyVars() returns (bool success)
+    function resetWeeklyVars() public returns (bool success)
     {
         /*
             After the weekly vars have been been reset, the player that last
@@ -171,7 +171,7 @@ contract BillionaireTokenRaffle
         clearAddressMappings();
         
         prev_week_ID += 1;
-        if prev_week_ID == 3
+        if (prev_week_ID == 3)
         	prev_week_ID == 0;
 
         random_numbers.length = 0;
@@ -179,7 +179,7 @@ contract BillionaireTokenRaffle
         return success;
     }
 
-    function public clearAddressMappings() returns (bool success)
+    function clearAddressMappings() public returns (bool success)
     {
         /*
         This function clears address_to_tickets and raffle_bowl.
@@ -210,7 +210,7 @@ contract BillionaireTokenRaffle
         }
     }
 
-    function public clearAddressRaffleBowl(address winner_addr) returns (bool success)
+    function clearAddressRaffleBowl(address winner_addr) public returns (bool success)
     {
         /* This function iterates through the raffle bowl mapping
            and removes all the entries with a specific address. */
@@ -223,7 +223,7 @@ contract BillionaireTokenRaffle
         return success;
     }
 
-    function public getPlayerStake(address player) returns (uint256 stake)
+    function getPlayerStake(address player) public returns (uint256 stake)
     {
         /* This function takes a player address as argument and returns his stake
         (the full number of tokens he has registered for the raffle during that week) */
@@ -231,12 +231,12 @@ contract BillionaireTokenRaffle
         return stake;
     }
 
-    function public getPercent(uint8 percent, uint256 number) returns (uint256 result)
+    function getPercent(uint8 percent, uint256 number) public returns (uint256 result)
     {
         return number * percent / 100;
     }
 
-    function public resetRaffle() returns (int8 resetRaffle_STATUS)
+    function resetRaffle() public returns (int8 resetRaffle_STATUS)
     {
         /*
             resetRaffle STATUS CODES:
@@ -321,14 +321,14 @@ contract BillionaireTokenRaffle
         }
     }
 
-    function private fillWeeklyArrays(uint256 number_of_tickets) returns (int8 fillWeeklyArrays_STATUS)
+    function fillWeeklyArrays(uint256 number_of_tickets) private returns (int8 fillWeeklyArrays_STATUS)
     {
     	/*
     		[-1] Error with prev_week_ID
     		[0]  OK
     	*/
 
-    	if (prev_week_ID != 0) && (prev_week_ID != 1)
+    	if ((prev_week_ID != 0) && (prev_week_ID != 1))
         {
         	return -1;
         }
@@ -355,7 +355,7 @@ contract BillionaireTokenRaffle
         return 0;
     }
 
-    function public registerTickets(uint256 number_of_tickets) returns (int8 registerTickets_STATUS)
+    function registerTickets(uint256 number_of_tickets) public returns (int8 registerTickets_STATUS)
     {
         /*
             registerTickets RETURN CODES:
@@ -416,7 +416,7 @@ contract BillionaireTokenRaffle
         	return 0;
     }
 
-    function public burnTenPercent(uint256 raffle_balance) returns (bool success_state)
+    function burnTenPercent(uint256 raffle_balance) public returns (bool success_state)
     {
         uint256 amount_to_burn = getPercent(10, raffle_balance);
         total_burned_by_raffle += amount_to_burn;
@@ -431,7 +431,7 @@ contract BillionaireTokenRaffle
         /* Test here to see if we need more checks. */
     }
 
-    function public getNextWinner() returns (address next_winner)
+    function getNextWinner() public returns (address next_winner)
     {
         /*
         Function that returns the next winner.
@@ -482,19 +482,19 @@ contract BillionaireTokenRaffle
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
 
-    function public setXBLAddr(address _XBLContract_addr) onlyOwner
+    function setXBLAddr(address _XBLContract_addr) public onlyOwner
     {
         /* Debugging purposes. This will be hardcoded in the original version. */
         XBLContract_addr = _XBLContract_addr;
         ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
     }
 
-    function public testCallTotalSupply() returns (uint256 total_supply)
+    function testCallTotalSupply() public returns (uint256 total_supply)
     {
         return ERC20_CALLS.totalSupply();
     }
 
-    function public demoPopulateVariables0_OneRegistrant()
+    function demoPopulateVariables0_OneRegistrant() public
     {
         /* Populate the variables as if raffle just had one registrant - normally it should return his balance. */
         raffle_bowl[0] = msg.sender;
@@ -503,7 +503,7 @@ contract BillionaireTokenRaffle
         address_to_tickets[msg.sender] = 1;
     }
 
-    function public demoPopulateVariables1_TwoRegistrants(address extra_winner_0)
+    function demoPopulateVariables1_TwoRegistrants(address extra_winner_0) public
     {
         /* Populate the variables as if raffle just had two registrant - normally it should return their balance. */
         raffle_bowl[0] = msg.sender;
@@ -514,7 +514,7 @@ contract BillionaireTokenRaffle
         address_to_tickets[extra_winner_0] = 1;
     }
 
-    function public demoPopulateVariables2_ThreeWinners(address extra_winner_0, address extra_winner_1)
+    function demoPopulateVariables2_ThreeWinners(address extra_winner_0, address extra_winner_1) public
     {
         /* Populate the variables as if raffle had been going on for a while and we have a
             bunch of entries in the raffle_bowl.
@@ -529,7 +529,7 @@ contract BillionaireTokenRaffle
         address_to_tickets[extra_winner_1] = 1;
     }
 
-    function public testPopulateAndClearAddressMappings()
+    function testPopulateAndClearAddressMappings() public
     {
         /* First populate address_to_tickets and raffle_bowl, then call clearAddressMappings to
             test if they get properly reset
