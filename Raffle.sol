@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.8.5, pre-release.
+The "Become a Billionaire" decentralized Raffle v0.8.6, pre-release.
 ~by Gluedog
 -----------
 
