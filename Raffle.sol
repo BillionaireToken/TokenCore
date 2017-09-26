@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.8.6, pre-release.
+The "Become a Billionaire" decentralized Raffle v0.8.5, pre-release.
 ~by Gluedog
 -----------
 
@@ -321,7 +321,7 @@ contract BillionaireTokenRaffle
         }
     }
 
-    function fillWeeklyArrays(uint256 number_of_tickets) private returns (int8 fillWeeklyArrays_STATUS)
+    function fillWeeklyArrays(uint256 number_of_tickets, address user_addr) private returns (int8 fillWeeklyArrays_STATUS)
     {
     	/*
     		[-1] Error with prev_week_ID
@@ -410,7 +410,7 @@ contract BillionaireTokenRaffle
         /*  Reaching this point means the ticket registrant is legit  */
         /*  Every ticket will add an entry to the raffle_bowl         */
 
-        if (fillWeeklyArrays(number_of_tickets) == -1)
+        if (fillWeeklyArrays(number_of_tickets, user_addr) == -1)
         	return -4;
         else
         	return 0;
