@@ -19,9 +19,16 @@ contract XBL_ERC20Wrapper
     function burnFrom(address _from, uint256 _value) returns (bool success);
 }
 
+contract XBL_RaffleWrapper
+{
+    function getLastWeekStake(address user_addr) public returns (uint256 last_week_stake);
+}
+
 contract TheBurner
 {
     XBL_ERC20Wrapper ERC20_CALLS;
+    XBL_RaffleWrapper RAFFLE_CALLS;
+
     uint8 public extra_bonus; /* The percentage of extra coins that the burner will reward people for. */
 
     address public burner_addr;
@@ -33,6 +40,8 @@ contract TheBurner
     {
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
         ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+        RAFFLE_CALLS = XBL_RaffleWrapper(XBLContract_addr);
+
         extra_bonus = 5; /* 5% reward for burning your own coins, provided the burner has enough. */
         burner_addr = address(this);
         owner_addr = msg.sender;
@@ -67,11 +76,13 @@ contract TheBurner
         uint256 eligible_reward = tokens_registered + getPercent(extra_bonus, tokens_registered);
         require (eligible_reward <= own_supply); // Do we have enough tokens to give out?
 
+        uint256 prev_week_stake = RAFFLE_CALLS.getLastWeekStake(user_addr);
+        require (tokens_registered <= prev_week_stake); // Did he have enough tickets in last week's Raffle ?
+
         /* Reaching this point means we can give out the reward */
 
         /* Burn their tokens and give them their reward */
         ERC20_CALLS.burnFrom(user_addr, tokens_registered);
         ERC20_CALLS.transfer(user_addr, eligible_reward);
-
     }
 }
