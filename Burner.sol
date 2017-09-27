@@ -26,6 +26,8 @@ contract XBL_RaffleWrapper
 
 contract TheBurner
 {
+    bool DEBUG = true;
+
     XBL_ERC20Wrapper ERC20_CALLS;
     XBL_RaffleWrapper RAFFLE_CALLS;
 
@@ -39,8 +41,13 @@ contract TheBurner
     function TheBurner()
     {
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
-        ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
-        RAFFLE_CALLS = XBL_RaffleWrapper(XBLContract_addr);
+        raffle_addr = 0x0; /* Do we have a raffle address? */
+
+        if (DEBUG == false)
+        {
+            ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+            RAFFLE_CALLS = XBL_RaffleWrapper(raffle_addr);
+        }
 
         extra_bonus = 5; /* 5% reward for burning your own coins, provided the burner has enough. */
         burner_addr = address(this);
@@ -57,6 +64,7 @@ contract TheBurner
     {
         /* Allows the owner to set the raffle address */
         raffle_addr = _raffle_addr;
+        RAFFLE_CALLS = XBL_RaffleWrapper(raffle_addr);
     }
 
     function getPercent(uint8 percent, uint256 number) returns (uint256 result)
@@ -84,5 +92,17 @@ contract TheBurner
         /* Burn their tokens and give them their reward */
         ERC20_CALLS.burnFrom(user_addr, tokens_registered);
         ERC20_CALLS.transfer(user_addr, eligible_reward);
+    }
+
+
+    /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
+    /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
+    /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
+
+    function setXBLAddr(address _XBLContract_addr) public onlyOwner
+    {
+        /* Debugging purposes. This will be hardcoded in the original version. */
+        XBLContract_addr = _XBLContract_addr;
+        ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
     }
 }
