@@ -88,10 +88,18 @@ contract BillionaireTokenRaffle
 
     /* This function will generate a random number between 0 and upper_limit-1  */
     /* Random number generators in Ethereum Smart Contracts are deterministic   */
-    function getRand(uint256 upper_limit) public returns (uint256 random_number)
+    function getRand(uint256 upper_limit) private returns (uint256 random_number)
     {
         /* This will have to be replaced with something less predictable.    */
         return uint(block.blockhash(block.number-1)) % upper_limit;
+    }
+
+    function getLastWeekStake(address user_addr) public returns (uint256 last_week_stake)
+    {
+    	if (prev_week_ID == 0)
+    		return address_to_tickets_prev_week0[user_addr];
+    	if (prev_week_ID == 1)
+    		return address_to_tickets_prev_week1[user_addr];
     }
 
     function BillionaireTokenRaffle()
