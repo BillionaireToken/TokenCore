@@ -45,6 +45,8 @@ contract XBL_ERC20Wrapper
 
 contract BillionaireTokenRaffle
 {
+	bool DEBUG = true;
+
     address public winner_1;
     address public winner_2;
     address public winner_3;
@@ -106,7 +108,9 @@ contract BillionaireTokenRaffle
     {
         /* Billionaire Token contract address */
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
-        ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+
+        if (DEBUG == false)
+        	ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
 
         burner_addr = 0x0; /* Burner address                                      */
         raffle_addr = address(this); /* Own address                              */
@@ -126,7 +130,6 @@ contract BillionaireTokenRaffle
         current_week = 0; /* Starts at week 0 */
         prev_week_ID = 0; /* First variable used is address_to_tickets_prev_week0 */
 
-        total_supply = ERC20_CALLS.totalSupply(); /* The whole contract will fail when deployed if this line isn't */
         /* commented out and the Coin with the correct addres doesn't exist */
         rt_upper_limit = total_supply / ticket_price;
     }
@@ -540,7 +543,7 @@ contract BillionaireTokenRaffle
     function testPopulateAndClearAddressMappings() public
     {
         /* First populate address_to_tickets and raffle_bowl, then call clearAddressMappings to
-            test if they get properly reset
+            test if they get properly reset.
         */
     }
 }
