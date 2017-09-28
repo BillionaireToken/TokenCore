@@ -1,4 +1,4 @@
-/* The Burner v0.1, pre-release.
+/* The Burner v0.2, pre-release.
 *  ~by gluedog
 *
 * The Burner is Billionaire Token's version of a "Faucet" - an evil, twisted Faucet. 
@@ -6,7 +6,7 @@
 * Unlike a Faucet, the Burner will also burn coins and reduce the maximum supply in the process of giving people extra coins.
 */
 
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.8;
 
 contract XBL_ERC20Wrapper
 {
