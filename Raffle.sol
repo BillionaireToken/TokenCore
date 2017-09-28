@@ -67,7 +67,7 @@ contract BillionaireTokenRaffle
     uint256 public total_supply;
     uint256 public rt_upper_limit; /* registerTickets() upper ticket limit */
     uint256 public random_number_counter;
-    XBL_ERC20Wrapper private ERC20_CALLS;
+    XBL_ERC20Wrapper constant private ERC20_CALLS;
 
     /*   The raffle_bowl is a mapping between an (ever increasing) int and an address.  */
     /*   The raffle_bowl gets reset every week.                                         */
@@ -90,7 +90,7 @@ contract BillionaireTokenRaffle
 
     /* This function will generate a random number between 0 and upper_limit-1  */
     /* Random number generators in Ethereum Smart Contracts are deterministic   */
-    function getRand(uint256 upper_limit) private returns (uint256 random_number)
+    function getRand(uint32 upper_limit) private returns (uint32 random_number)
     {
         /* This will have to be replaced with something less predictable.    */
         return uint(block.blockhash(block.number-1)) % upper_limit;
@@ -179,7 +179,7 @@ contract BillionaireTokenRaffle
             to have his tickets added to next week's Raffle Bowl.
         */
 
-        total_supply = ERC20_CALLS.totalSupply(); // This has to be called after we have burned the 10%.
+        total_supply = ERC20_CALLS.totalSupply();
         rt_upper_limit = total_supply / ticket_price;
 
         raffle_bowl_counter = 0;
@@ -194,7 +194,7 @@ contract BillionaireTokenRaffle
             prev_week_ID = 0;
 
         random_numbers.length = 0;
-        // Check if the addresses were cleared correctly.
+        /* Test if the everything was cleared correctly. */
         return success;
     }
 
@@ -210,7 +210,7 @@ contract BillionaireTokenRaffle
           like an array or something, because the mappings may get way too big
           and cost a lot of gas, or have a lot of overhead.
         */
-        uint16 counter = 0;
+        uint32 counter = 0;
         while (true)
         {
             address_to_tickets[raffle_bowl[counter]] = 0;
@@ -233,7 +233,7 @@ contract BillionaireTokenRaffle
     {
         /* This function iterates through the raffle bowl mapping
            and removes all the entries with a specific address. */
-        for (uint16 i = 0; i <= raffle_bowl_counter; i++)
+        for (uint32 i = 0; i <= raffle_bowl_counter; i++)
         {
             if (raffle_bowl[i] == winner_addr)
                 raffle_bowl[i] = 0x0;
@@ -491,7 +491,7 @@ contract BillionaireTokenRaffle
         if (current_winner_set == 3)
             return 0x0;
 
-        uint256 _rand = getRand(raffle_bowl_counter+1);
+        uint32 _rand = getRand(raffle_bowl_counter+1);
         random_numbers[random_number_counter] = _rand;
         random_number_counter += 1;
 
