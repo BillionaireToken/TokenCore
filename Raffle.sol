@@ -6,20 +6,30 @@ The "Become a Billionaire" decentralized Raffle v0.9, pre-release.
 The weekly Become a Billionaire decentralized raffle will be the basis of the deflationary mechanism for Billionaire Token.
 ---------------------------------------------------------------------------------------------------------------------------
 Every week, users can send 20 XBL to an Ethereum Smart Contract address – this is the equivalent of buying one ticket,
-	more tickets mean a better chance to win. Users can buy an unlimited number of tickets to increase their chances.
-	At the end of the week, the Smart Contract will choose three winners at random. First place will get 40% of
-	the tokens  that were raised during that week, second place gets 20% and third place gets 10%.
-	From the remaining 30% of the tokens: 10% are burned – as an offering to the market gods. The other 20% are sent
-	to another Smart Contract Address that works like a twisted faucet – rewarding people for burning their own coins.
+    more tickets mean a better chance to win. Users can buy an unlimited number of tickets to increase their chances.
+    At the end of the week, the Smart Contract will choose three winners at random. First place will get 40% of
+    the tokens  that were raised during that week, second place gets 20% and third place gets 10%.
+    From the remaining 30% of the tokens: 10% are burned – as an offering to the market gods. The other 20% are sent
+    to another Smart Contract Address that works like a twisted faucet – rewarding people for burning their own coins.
 
 The Become a Billionaire raffle Smart Contract will run forever, and will have an internal timer that will reset
-	itself every seven days. The players are registered to the Raffle by creating an internal mapping,
-	inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
-	number of tickets. This mapping is reset every time the internal timer resets (every seven days).
+    itself every seven days. The players are registered to the Raffle by creating an internal mapping,
+    inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
+    number of tickets. This mapping is reset every time the internal timer resets (every seven days).
 
-+---------------------------------------+
-| Getting close to a deployable version |
-+---------------------------------------+
++-------------------------------------------------------------------+
+| This code is still very much in-development and is likely to be   |
+| completely different by the time the first versions are deployed. |
++-------------------------------------------------------------------+
+
+
+
+1. Find the winners in the while loop. - CHECK (TEST!)
+2. Delete their other entries from the mapping - CHECK (TEST!)
+3. Check how much they should win - CHECK (TEST!)
+4. Use transfer() function to give them their coins - CHECK (TEST!)
+5. Call burnTenPercent() - CHECK (TEST!)
+6. Use transfer() to give the remaining (20%) of the coins to the burner_addr - CHECK!
 
 */
 pragma solidity ^0.4.8;
@@ -108,7 +118,7 @@ contract BillionaireTokenRaffle
         }
         else if (DEBUG == true)
         {
-            ticket_price = 10;
+            ticket_price = 10; /* Easier to test */
             rt_upper_limit = 333333;
         }
 
@@ -180,7 +190,7 @@ contract BillionaireTokenRaffle
         clearAddressMappings();
         
         prev_week_ID++;
-        if (prev_week_ID > 3)
+        if (prev_week_ID > 2)
             prev_week_ID = 0;
 
         random_numbers.length = 0;
@@ -379,13 +389,9 @@ contract BillionaireTokenRaffle
         address_to_tickets[user_addr] += number_of_tickets;
         
         if (prev_week_ID == 0)
-        {
             address_to_tickets_prev_week0[user_addr] += number_of_tickets;
-        }
         else if (prev_week_ID == 1)
-        {
             address_to_tickets_prev_week1[user_addr] += number_of_tickets;
-        }
 
         uint256 _ticket_number = number_of_tickets;
         while (_ticket_number > 0)
