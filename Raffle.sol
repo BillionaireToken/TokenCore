@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.8.5, pre-release.
+The "Become a Billionaire" decentralized Raffle v0.9, pre-release.
 ~by Gluedog
 -----------
 
@@ -17,22 +17,12 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
 	inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
 	number of tickets. This mapping is reset every time the internal timer resets (every seven days).
 
-+-------------------------------------------------------------------+
-| This code is still very much in-development and is likely to be   |
-| completely different by the time the first versions are deployed. |
-+-------------------------------------------------------------------+
-
-
-
-1. Find the winners in the while loop. - CHECK (TEST!)
-2. Delete their other entries from the mapping - CHECK (TEST!)
-3. Check how much they should win - CHECK (TEST!)
-4. Use transfer() function to give them their coins - CHECK (TEST!)
-5. Call burnTenPercent() - CHECK (TEST!)
-6. Use transfer() to give the remaining (20%) of the coins to the burner_addr - CHECK!
++---------------------------------------+
+| Getting close to a deployable version |
++---------------------------------------+
 
 */
-pragma solidity ^0.4.0;
+pragma solidity ^0.4.8;
 contract XBL_ERC20Wrapper
 {
     function transferFrom(address from, address to, uint value) returns (bool success);
@@ -45,7 +35,7 @@ contract XBL_ERC20Wrapper
 
 contract BillionaireTokenRaffle
 {
-	bool DEBUG = true;
+    bool private DEBUG = true;
 
     address public winner_1;
     address public winner_2;
@@ -57,7 +47,7 @@ contract BillionaireTokenRaffle
     address public owner_addr;
 
     uint256 public raffle_bowl_counter;
-    uint256 public minutes_in_a_week;
+    uint256 private minutes_in_a_week;
     uint256 public next_week;
     uint256 public ticket_price;
     uint256 public total_burned_by_raffle;
@@ -86,7 +76,7 @@ contract BillionaireTokenRaffle
                                     Can only be [0] or [1].
                                 */
 
-	uint256[] public random_numbers; /* Remember the random numbers used inside getNextWinner */
+    uint256[] public random_numbers; /* Remember the random numbers used inside getNextWinner */
 
     /* This function will generate a random number between 0 and upper_limit-1  */
     /* Random number generators in Ethereum Smart Contracts are deterministic   */
@@ -98,10 +88,10 @@ contract BillionaireTokenRaffle
 
     function getLastWeekStake(address user_addr) public returns (uint256 last_week_stake)
     {
-    	if (prev_week_ID == 0)
-    		return address_to_tickets_prev_week0[user_addr];
-    	if (prev_week_ID == 1)
-    		return address_to_tickets_prev_week1[user_addr];
+        if (prev_week_ID == 0)
+            return address_to_tickets_prev_week0[user_addr];
+        if (prev_week_ID == 1)
+            return address_to_tickets_prev_week1[user_addr];
     }
 
     function BillionaireTokenRaffle()
@@ -110,13 +100,22 @@ contract BillionaireTokenRaffle
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
 
         if (DEBUG == false)
-        	ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+        {
+            ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+            total_supply = ERC20_CALLS.totalSupply();
+            ticket_price = 10000000000000000000; /* 10 XBL  */
+            rt_upper_limit = total_supply / ticket_price;
+        }
+        else if (DEBUG == true)
+        {
+            ticket_price = 10;
+            rt_upper_limit = 333333;
+        }
 
         burner_addr = 0x0; /* Burner address                                      */
         raffle_addr = address(this); /* Own address                              */
         owner_addr = msg.sender; /* Set the owner address as the initial sender */
 
-        ticket_price = 20000000000000000000; /* 20 XBL                                                           */
         total_burned_by_raffle = 0; /* A variable that keeps track of how many tokens were burned by the raffle */
         raffle_balance = 0;
         random_number_counter = 0;
@@ -129,9 +128,6 @@ contract BillionaireTokenRaffle
         next_week = now + minutes_in_a_week * 1 minutes; /* Will get set every time resetRaffle() is called */
         current_week = 0; /* Starts at week 0 */
         prev_week_ID = 0; /* First variable used is address_to_tickets_prev_week0 */
-
-        /* commented out and the Coin with the correct addres doesn't exist */
-        rt_upper_limit = total_supply / ticket_price;
     }
 
     /* A modifier that can be applied to functions to only allow the owner to execute them.       */
@@ -174,6 +170,8 @@ contract BillionaireTokenRaffle
         */
 
         total_supply = ERC20_CALLS.totalSupply(); // This has to be called after we have burned the 10%.
+        rt_upper_limit = total_supply / ticket_price;
+
         raffle_bowl_counter = 0;
         current_winner_set = 0;
         winner_1 = 0x0;
@@ -181,9 +179,9 @@ contract BillionaireTokenRaffle
         winner_3 = 0x0;
         clearAddressMappings();
         
-        prev_week_ID += 1;
-        if (prev_week_ID == 3)
-        	prev_week_ID == 0;
+        prev_week_ID++;
+        if (prev_week_ID > 3)
+            prev_week_ID = 0;
 
         random_numbers.length = 0;
         // Check if the addresses were cleared correctly.
@@ -210,9 +208,9 @@ contract BillionaireTokenRaffle
 
             /* We have to clear the opposite of whatever prev_week_ID is */
             if (prev_week_ID == 0)
-            	address_to_tickets_prev_week1[raffle_bowl[counter]] = 0;
+                address_to_tickets_prev_week1[raffle_bowl[counter]] = 0;
             if (prev_week_ID == 1)
-            	address_to_tickets_prev_week0[raffle_bowl[counter]] =0;
+                address_to_tickets_prev_week0[raffle_bowl[counter]] = 0;
 
             if (counter == raffle_bowl_counter)
                 return true;
@@ -251,12 +249,24 @@ contract BillionaireTokenRaffle
     {
         /*
             resetRaffle STATUS CODES:
-
+            
+            [-4] - Raffle still has tokens after fillBurner().
+            [-3] - fillBurner() error.
             [-2] - getNextWinner() error.
             [-1] - We have no participants.
             [0 ] - ALL OK.
             [1 ] - Only one winner, was refunded.
             [2 ] - Two winners were refunded.
+
+            resetRaffle() must:
+
+                 1. Give the players their rewards.
+                 2. Burn 10%.
+                 3. Send coins to the burner.
+                 4. Reset all the variables.
+                 5. After the variables are re-set, add whatever player registered
+                        after time to the new week's raffle_bowl.
+
         */
 
         while (now >= next_week)
@@ -320,39 +330,61 @@ contract BillionaireTokenRaffle
                     ERC20_CALLS.transfer(winner_1, p1_reward);
                     ERC20_CALLS.transfer(winner_2, p2_reward);
                     ERC20_CALLS.transfer(winner_3, p3_reward);
+
                     burnTenPercent(raffle_balance);
+
+                    /* Fill the burner with tokens */
+                    if (fillBurner() == -1)
+                        return -3; /* Burner addr NULL */ 
 
                     /* Reset variables. */
                     resetWeeklyVars();
 
-                    /* Need some sanity checks here! */
+                    /* Sanity checks */
+                    if (ERC20_CALLS.balanceOf(raffle_addr) > 0)
+                        return -4;
+
                     return 0;
                 }
             }
         }
     }
 
+    function fillBurner() private returns (int8 fillBurner_STATUS)
+    {
+        /* [-1]: Burner Address NULL
+        *  [ 0]: OK
+        */
+        if (burner_addr == 0x0)
+            return -1;
+
+        uint256 leftover = ERC20_CALLS.balanceOf(raffle_addr);
+        ERC20_CALLS.transfer(burner_addr, leftover);
+
+        return 0;
+    }
+
     function fillWeeklyArrays(uint256 number_of_tickets, address user_addr) private returns (int8 fillWeeklyArrays_STATUS)
     {
-    	/*
-    		[-1] Error with prev_week_ID
-    		[0]  OK
-    	*/
+        /*
+            [-1] Error with prev_week_ID
+            [0]  OK
+        */
 
-    	if ((prev_week_ID != 0) && (prev_week_ID != 1))
+        if ((prev_week_ID != 0) && (prev_week_ID != 1))
         {
-        	return -1;
+            return -1;
         }
 
-    	address_to_tickets[user_addr] += number_of_tickets;
+        address_to_tickets[user_addr] += number_of_tickets;
         
         if (prev_week_ID == 0)
         {
-        	address_to_tickets_prev_week0[user_addr] += number_of_tickets;
+            address_to_tickets_prev_week0[user_addr] += number_of_tickets;
         }
         else if (prev_week_ID == 1)
         {
-        	address_to_tickets_prev_week1[user_addr] += number_of_tickets;
+            address_to_tickets_prev_week1[user_addr] += number_of_tickets;
         }
 
         uint256 _ticket_number = number_of_tickets;
@@ -371,7 +403,9 @@ contract BillionaireTokenRaffle
         /*
             registerTickets RETURN CODES:
 
-			[-4] - fillWeeklyArrays() prev_week_ID value error.
+            [-6] - Raffle still has tickets after fillBurner() called 
+            [-5] - fillBurner() null burner addr, raised error
+            [-4] - fillWeeklyArrays() prev_week_ID invalid value, raised error.
             [-3] - getNextWinner() fail, raised error.
             [-2] - ACTUAL ALLOWANCE CHECK MISMATCH.
             [-1] - INVALID INPUT (zero or too many tickets).
@@ -382,20 +416,15 @@ contract BillionaireTokenRaffle
         if (now >= next_week)
         {
             int8 RAFFLE_STATUS = resetRaffle();
-            /*
-                resetRaffle() must:
-
-                    1. Give the players their rewards.
-                    2. Burn 10%.
-                    3. Send coins to the burner.
-                    4. Reset all the variables.
-                    5. After the variables are re-set, add whatever player registered
-                        after time to the new week's raffle_bowl.
-
-            */
 
             if (RAFFLE_STATUS == -2)
-                return -3; /* getNextWinner() errored, raise it!*/
+                return -3; /* getNextWinner() errored, raise it! */
+
+            if (RAFFLE_STATUS == -3)
+                return -5; /* fillBurner() errored, raise it! */
+
+            if (RAFFLE_STATUS == -4)
+                return -6; /* Raffle still has tickets after fillBurner() called */
         }
         /* Before users will call registerTickets function,                          */
         /* they will first have to call approve() on the XBL contract address        */
@@ -422,9 +451,12 @@ contract BillionaireTokenRaffle
         /*  Every ticket will add an entry to the raffle_bowl         */
 
         if (fillWeeklyArrays(number_of_tickets, user_addr) == -1)
-        	return -4;
+            return -4; /* prev_week_ID invalid value */
         else
-        	return 0;
+        {
+            ERC20_CALLS.transferFrom(user_addr, raffle_addr, number_of_tickets*ticket_price);
+            return 0;
+        }
     }
 
     function burnTenPercent(uint256 raffle_balance) public returns (bool success_state)
@@ -493,19 +525,20 @@ contract BillionaireTokenRaffle
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
 
-    function setXBLAddr(address _XBLContract_addr) public onlyOwner
+    function dSetXBLAddr(address _XBLContract_addr) public onlyOwner
     {
         /* Debugging purposes. This will be hardcoded in the original version. */
         XBLContract_addr = _XBLContract_addr;
         ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+        total_supply = ERC20_CALLS.totalSupply();
     }
 
-    function testCallTotalSupply() public returns (uint256 total_supply)
+    function dTestCallTotalSupply() public returns (uint256 total_supply)
     {
         return ERC20_CALLS.totalSupply();
     }
 
-    function demoPopulateVariables0_OneRegistrant() public
+    function dTestPopulateVariables0_OneRegistrant() public
     {
         /* Populate the variables as if raffle just had one registrant - normally it should return his balance. */
         raffle_bowl[0] = msg.sender;
@@ -514,7 +547,7 @@ contract BillionaireTokenRaffle
         address_to_tickets[msg.sender] = 1;
     }
 
-    function demoPopulateVariables1_TwoRegistrants(address extra_winner_0) public
+    function dTestPopulateVariables1_TwoRegistrants(address extra_winner_0) public
     {
         /* Populate the variables as if raffle just had two registrant - normally it should return their balance. */
         raffle_bowl[0] = msg.sender;
@@ -525,7 +558,7 @@ contract BillionaireTokenRaffle
         address_to_tickets[extra_winner_0] = 1;
     }
 
-    function demoPopulateVariables2_ThreeWinners(address extra_winner_0, address extra_winner_1) public
+    function dTestPopulateVariables2_ThreeWinners(address extra_winner_0, address extra_winner_1) public
     {
         /* Populate the variables as if raffle had been going on for a while and we have a
             bunch of entries in the raffle_bowl.
@@ -540,7 +573,7 @@ contract BillionaireTokenRaffle
         address_to_tickets[extra_winner_1] = 1;
     }
 
-    function testPopulateAndClearAddressMappings() public
+    function dTestPopulateAndClearAddressMappings() public
     {
         /* First populate address_to_tickets and raffle_bowl, then call clearAddressMappings to
             test if they get properly reset.
