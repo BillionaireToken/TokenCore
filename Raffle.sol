@@ -17,20 +17,6 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
     inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
     number of tickets. This mapping is reset every time the internal timer resets (every seven days).
 
-+-------------------------------------------------------------------+
-| This code is still very much in-development and is likely to be   |
-| completely different by the time the first versions are deployed. |
-+-------------------------------------------------------------------+
-
-
-
-1. Find the winners in the while loop. - CHECK (TEST!)
-2. Delete their other entries from the mapping - CHECK (TEST!)
-3. Check how much they should win - CHECK (TEST!)
-4. Use transfer() function to give them their coins - CHECK (TEST!)
-5. Call burnTenPercent() - CHECK (TEST!)
-6. Use transfer() to give the remaining (20%) of the coins to the burner_addr - CHECK!
-
 */
 pragma solidity ^0.4.8;
 contract XBL_ERC20Wrapper
