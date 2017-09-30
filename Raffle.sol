@@ -16,6 +16,7 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
     itself every seven days. The players are registered to the Raffle by creating an internal mapping,
     inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
     number of tickets. This mapping is reset every time the internal timer resets (every seven days).
+
 */
 pragma solidity ^0.4.8;
 contract XBL_ERC20Wrapper
@@ -341,7 +342,7 @@ contract BillionaireTokenRaffle
         Function that returns the next winner.
             It will generate a random number between raffle_bowl start value and raffle_bowl end value
             (and will remember this number so that it's not chosen again)
-            Every time a winner is found they are discarded from the array, and the loop continues.
+            Every time a winner is found they are discarded from the array.
         */
         if (current_winner_set == 3)
             return 0x0;
@@ -368,6 +369,7 @@ contract BillionaireTokenRaffle
         random_numbers[random_number_counter] = _rand;
         random_number_counter++;
 
+        /* Return the proper answer, based on the value of current_winner_set. */
         if (current_winner_set == 0)
         {
             address _winner_1 = raffle_bowl[_rand];
@@ -379,7 +381,7 @@ contract BillionaireTokenRaffle
         {
             address _winner_2 = raffle_bowl[_rand];
             if ((_winner_2 == 0x0) || (_winner_2 == _winner_1))
-                return 0x0; // Huge error!
+                return 0x0; /* Error case where we return a null address, or a duplicate */
             else
             {
                 clearAddressRaffleBowl(_winner_2);
@@ -391,7 +393,7 @@ contract BillionaireTokenRaffle
         {
             address _winner_3 = raffle_bowl[_rand];
             if ((_winner_3 == 0x0) || (_winner_3 == _winner_2) || (_winner_3 == _winner_1))
-                return 0x0; // Huge error!
+                return 0x0; /* Error case where we return a null address, or a duplicate */
             else
             {
                 clearAddressRaffleBowl(_winner_3);
@@ -486,13 +488,11 @@ contract BillionaireTokenRaffle
         if (number_of_tickets == 0)
             return -1;
 
-        address user_addr = msg.sender;
-
-        uint256 user_submitted_allowance = ticket_price * number_of_tickets;
-        uint256 actual_allowance = ERC20_CALLS.allowance(user_addr, raffle_addr);
-
-        if (actual_allowance < user_submitted_allowance)
+        if (ERC20_CALLS.allowance(msg.sender, raffle_addr) < ticket_price * number_of_tickets)
             return -2;
+
+        if (ERC20_CALLS.balanceOf(msg.sender) < ticket_price * number_of_tickets) 
+            return - 2;
 
         /*  Reaching this point means the ticket registrant is legit  */
         /*  Every ticket will add an entry to the raffle_bowl         */
