@@ -497,11 +497,11 @@ contract BillionaireTokenRaffle
         /*  Reaching this point means the ticket registrant is legit  */
         /*  Every ticket will add an entry to the raffle_bowl         */
 
-        if (fillWeeklyArrays(number_of_tickets, user_addr) == -1)
+        if (fillWeeklyArrays(number_of_tickets, msg.sender) == -1)
             return -4; /* prev_week_ID invalid value */
         else
         {
-            ERC20_CALLS.transferFrom(user_addr, raffle_addr, number_of_tickets*ticket_price);
+            ERC20_CALLS.transferFrom(msg.sender, raffle_addr, number_of_tickets*ticket_price);
             return 0;
         }
     }
