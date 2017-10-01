@@ -16,8 +16,8 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
     itself every seven days. The players are registered to the Raffle by creating an internal mapping,
     inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
     number of tickets. This mapping is reset every time the internal timer resets (every seven days).
-
 */
+
 pragma solidity ^0.4.8;
 contract XBL_ERC20Wrapper
 {
@@ -33,7 +33,7 @@ contract BillionaireTokenRaffle
 {
     bool private DEBUG = true;
 
-    /* Most of these vars must be made private before deploying the final version */
+    /* Most of these variables must be made private before deploying the final version */
 
     address public winner_1;
     address public winner_2;
@@ -73,9 +73,8 @@ contract BillionaireTokenRaffle
     uint8 public prev_week_ID; /* Keeps track of which variable is the correct indicator of prev week mapping
                                     Can only be [0] or [1].
                                 */
-
     uint256[] public random_numbers; /* Remember the random numbers used inside getNextWinner */
-    uint256 public random_number_counter; /* 
+    uint256[] private seeds; /* The seeds that we will need to generate randomness */
 
     /* This function will generate a random number between 0 and upper_limit-1  */
     /* Random number generators in Ethereum Smart Contracts are deterministic   */
@@ -85,7 +84,7 @@ contract BillionaireTokenRaffle
         return uint128(block.blockhash(block.number-1)) % upper_limit;
     }
 
-    function getLastWeekStake(address user_addr) public returns (uint256 last_week_stake)
+    function getLastWeekStake(address user_addr) public onlyBurner returns (uint256 last_week_stake)
     {
         if (prev_week_ID == 0)
             return address_to_tickets_prev_week0[user_addr];
@@ -116,7 +115,6 @@ contract BillionaireTokenRaffle
         total_burned_by_raffle = 0; /* A variable that keeps track of how many tokens were burned by the raffle */
         raffle_balance = 0;
         unique_players = 0;
-        random_number_counter = 0;
 
         raffle_bowl_counter = 0; /* This is the key for the raffle_bowl mapping         */
         current_winner_set = 0; /* [0] - No winners are set; [1] - First winner set;   */
@@ -130,7 +128,7 @@ contract BillionaireTokenRaffle
 
     /* A modifier that can be applied to functions to only allow the owner to execute them.       */
     /* This is very useful in cases where one would like to upgrade the deflationary algorithm.   */
-    /* We can simple use setter functions on the "Burner address",                                */
+    /* We can simply use setter functions on the "Burner address",                                */
     /* so that if we update the Burner, we can just point the Raffle to the new version of it.    */
     modifier onlyOwner()
     {
@@ -354,10 +352,10 @@ contract BillionaireTokenRaffle
         {
             uint128 _rand = getRand(raffle_bowl_counter+1);
 
-            if (random_number_counter == 0)
+            if (random_numbers.length == 0)
                 break;
 
-            for (uint j = 0; j < random_number_counter; j++)
+            for (uint j = 0; j < random_numbers.length; j++)
             {
                 if (_rand == random_numbers[j])
                     continue;
@@ -366,8 +364,7 @@ contract BillionaireTokenRaffle
             break;
         }
         /* Remember the random number used */
-        random_numbers[random_number_counter] = _rand;
-        random_number_counter++;
+        random_numbers[random_numbers.length] = _rand;
 
         /* Return the proper answer, based on the value of current_winner_set. */
         if (current_winner_set == 0)
