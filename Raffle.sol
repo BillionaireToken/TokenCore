@@ -16,8 +16,8 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
     itself every seven days. The players are registered to the Raffle by creating an internal mapping,
     inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
     number of tickets. This mapping is reset every time the internal timer resets (every seven days).
-*/
 
+*/
 pragma solidity ^0.4.8;
 contract XBL_ERC20Wrapper
 {
@@ -35,6 +35,7 @@ contract BillionaireTokenRaffle
 
     /* Most of these variables must be made private before deploying the final version */
 
+    address[] public winners;
     address public winner_1;
     address public winner_2;
     address public winner_3;
@@ -46,6 +47,7 @@ contract BillionaireTokenRaffle
 
     uint64 public unique_players; /* Unique number of addresses registered in a week */
     uint128 public raffle_bowl_counter;
+    uint256[] public seeds;
     uint256 private minutes_in_a_week;
     uint256 public next_week_timestamp;
     uint256 public ticket_price;
@@ -73,19 +75,20 @@ contract BillionaireTokenRaffle
     uint8 public prev_week_ID; /* Keeps track of which variable is the correct indicator of prev week mapping
                                     Can only be [0] or [1].
                                 */
-    uint256[] public random_numbers; /* Remember the random numbers used inside getNextWinner */
-    uint256[] private seeds; /* The seeds that we will need to generate randomness */
 
-    /* This function will generate a random number between 0 and upper_limit-1  */
-    /* Random number generators in Ethereum Smart Contracts are deterministic   */
-    function getRand(uint128 upper_limit) private returns (uint128 random_number)
+    function getRand(uint256 upper_limit) public returns (uint256 random_number)
     {
-        /* This will have to be replaced with something less predictable.    */
-        return uint128(block.blockhash(block.number-1)) % upper_limit;
+        return uint(sha256(uint256(block.blockhash(block.number-1)) * uint256(sha256(msg.sender)))) % upper_limit;
+    }
+    
+    function getRandWithSeed(uint256 upper_limit, uint seed) public returns (uint256 random_number)
+    {
+        return seed % upper_limit;
     }
 
     function getLastWeekStake(address user_addr) public onlyBurner returns (uint256 last_week_stake)
     {
+        /* The burner accesses this function to retrieve each player's stake from the previous week. */
         if (prev_week_ID == 0)
             return address_to_tickets_prev_week0[user_addr];
         if (prev_week_ID == 1)
@@ -198,8 +201,7 @@ contract BillionaireTokenRaffle
         if (prev_week_ID > 2)
             prev_week_ID = 0;
 
-        random_numbers.length = 0;
-        /* Test if the everything was cleared correctly. */
+        /* Test if everything was cleared correctly. */
         return success;
     }
 
@@ -256,7 +258,7 @@ contract BillionaireTokenRaffle
             
             [-4] - Raffle still has tokens after fillBurner().
             [-3] - fillBurner() error.
-            [-2] - getNextWinner() error.
+            [-2] - getWinners() error.
             [-1] - We have no participants.
             [0 ] - ALL OK.
             [1 ] - Only one player, was refunded.
@@ -303,11 +305,9 @@ contract BillionaireTokenRaffle
         }
         /* Here we assume that we have more than three unique players in the raffle. */
         /* Let's choose three winners */
-        winner_1 = getNextWinner();
-        winner_2 = getNextWinner();
-        winner_3 = getNextWinner();
+        getWinners();
 
-        /* Catch any critical error from getNextWinner() and return -2 */
+        /* Do we even need this check? */
         if ((winner_1 == 0x0) || (winner_2 == 0x0) || (winner_3 == 0x0))
             return -2;
 
@@ -334,69 +334,66 @@ contract BillionaireTokenRaffle
         return 0; // All OK.
     }
 
-    function getNextWinner() public returns (address next_winner)
+    function getWinners() returns (uint getWinners_STATUS)
     {
-        /*
-        Function that returns the next winner.
-            It will generate a random number between raffle_bowl start value and raffle_bowl end value
-            (and will remember this number so that it's not chosen again)
-            Every time a winner is found they are discarded from the array.
-        */
-        if (current_winner_set == 3)
-            return 0x0;
+        // Acquire the first random number using previous blockhash as an initial seed.
+        uint initial_rand = getRand(seeds.length);
 
-        /* How many winners have been set? */
-        current_winner_set++;
+        // Use this first random number to choose one of the seeds from the array.
+        uint firstwinner_rand = getRandWithSeed(seeds.length, seeds[initial_rand]);
+
+        // This new random number is used to grab the first winner's index from raffle_bowl.
+        winner_1 = raffle_bowl[firstwinner_rand];
+
+        // Push this winner into the winner array.
+        winners.push(winner_1);
+
+        // Delete the first winner's tickets from address_to_tickets
+        address_to_tickets[winner_1] = 0;
+
+        // Acquire the second random number, while making sure it's not the same as a previous one.
+        // We shall then generate a new seed by adding the second random number with a counter_seed;
+        uint counter_seed = 742 * initial_rand; // Initiate the counter_seed.
+
+        uint second_rand = uint(sha256(firstwinner_rand+initial_rand)) % seeds.length;
 
         while (true)
         {
-            uint128 _rand = getRand(raffle_bowl_counter+1);
+            uint secondwinner_rand = uint(sha256(second_rand+counter_seed)) % seeds.length;
+            winner_2 = raffle_bowl[secondwinner_rand];
 
-            if (random_numbers.length == 0)
-                break;
-
-            for (uint j = 0; j < random_numbers.length; j++)
+            if (secondwinner_rand != firstwinner_rand)
             {
-                if (_rand == random_numbers[j])
-                    continue;
+                if (winner_2 != winner_1)
+                {
+                    /* Repeat all of the steps for winner_1 once we have a unique player */
+                    winners.push(winner_2);
+                    break;
+                }
+            }
+            counter_seed += counter_seed;
+        }
+        counter_seed += counter_seed;
+
+        uint third_rand = uint(sha256(secondwinner_rand+counter_seed)) % seeds.length;
+
+        while (true)
+        {
+            uint thirdwinner_rand = uint(sha256(third_rand+counter_seed)) % seeds.length;
+            winner_3 = raffle_bowl[thirdwinner_rand];
+
+            if ( (thirdwinner_rand != secondwinner_rand) && (thirdwinner_rand != firstwinner_rand) )
+            {
+                if ( (winner_3 != winner_1) && (winner_3 != winner_2) )
+                {
+                    winners.push(winner_3);
+                    break;
+                }
             }
 
-            break;
+            counter_seed += counter_seed;
         }
-        /* Remember the random number used */
-        random_numbers[random_numbers.length] = _rand;
-
-        /* Return the proper answer, based on the value of current_winner_set. */
-        if (current_winner_set == 0)
-        {
-            address _winner_1 = raffle_bowl[_rand];
-            clearAddressRaffleBowl(_winner_1);
-            return _winner_1;
-        }
-
-        if (current_winner_set == 1)
-        {
-            address _winner_2 = raffle_bowl[_rand];
-            if ((_winner_2 == 0x0) || (_winner_2 == _winner_1))
-                return 0x0; /* Error case where we return a null address, or a duplicate */
-            else
-            {
-                clearAddressRaffleBowl(_winner_2);
-                return _winner_2;
-            }
-        }
-
-        if (current_winner_set == 2)
-        {
-            address _winner_3 = raffle_bowl[_rand];
-            if ((_winner_3 == 0x0) || (_winner_3 == _winner_2) || (_winner_3 == _winner_1))
-                return 0x0; /* Error case where we return a null address, or a duplicate */
-            else
-            {
-                clearAddressRaffleBowl(_winner_3);
-                return _winner_3;
-            }
-        }
+        return 0;
     }
 
     function fillBurner() private returns (int8 fillBurner_STATUS)
@@ -443,6 +440,8 @@ contract BillionaireTokenRaffle
             raffle_bowl_counter += 1;
             _ticket_number -= 1;
         }
+        /* Capture a seed from the user */
+        seeds.push(uint(sha256(user_addr)) * uint(sha256(now)));
 
         return 0;
     }
@@ -455,7 +454,7 @@ contract BillionaireTokenRaffle
             [-6] - Raffle still has tickets after fillBurner() called 
             [-5] - fillBurner() null burner addr, raised error
             [-4] - fillWeeklyArrays() prev_week_ID invalid value, raised error.
-            [-3] - getNextWinner() fail, raised error.
+            [-3] - getWinners() fail, raised error.
             [-2] - ACTUAL ALLOWANCE CHECK MISMATCH.
             [-1] - INVALID INPUT (zero or too many tickets).
             [0 ] - REGISTERED OK.
@@ -467,7 +466,7 @@ contract BillionaireTokenRaffle
             int8 RAFFLE_STATUS = resetRaffle();
 
             if (RAFFLE_STATUS == -2)
-                return -3; /* getNextWinner() errored, raise it! */
+                return -3; /* getWinners() errored, raise it! */
 
             if (RAFFLE_STATUS == -3)
                 return -5; /* fillBurner() errored, raise it! */
