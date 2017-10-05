@@ -252,9 +252,8 @@ contract BillionaireTokenRaffle
 
         if (raffle_bowl_counter == 0)
         {    /*   We have no registrants.  */
-            /* Reset the stats and return */
-            resetWeeklyVars();
-            return -1;
+            resetWeeklyVars(); 
+            return -1; /* Reset the stats and return */
         }
 
         if (unique_players < 4)
@@ -264,17 +263,14 @@ contract BillionaireTokenRaffle
             {
                 /* And delete their tickets from the mapping */
                 if (address_to_tickets[raffle_bowl[x]] != 0)
-                {
                     ERC20_CALLS.transfer(raffle_bowl[x], address_to_tickets[raffle_bowl[x]]*ticket_price);
-                    address_to_tickets[raffle_bowl[x]] = 0;
-                }
             }
 
             resetWeeklyVars();
             /* Return 1, 2 or 3 depending on how many raffle players were refunded. */
             return int8(unique_players);
         }
-        /* Assuming that we have more than three unique players in the raffle. */
+        /* At this point we assume that we have more than three unique players. */
         getWinners(); /* Choose three winners */
 
         /* Do we have winners? */
