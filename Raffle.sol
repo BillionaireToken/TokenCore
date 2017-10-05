@@ -264,8 +264,10 @@ contract BillionaireTokenRaffle
             {
                 /* And delete their tickets from the mapping */
                 if (address_to_tickets[raffle_bowl[x]] != 0)
+                {
                     ERC20_CALLS.transfer(raffle_bowl[x], address_to_tickets[raffle_bowl[x]]*ticket_price);
                     address_to_tickets[raffle_bowl[x]] = 0;
+                }
             }
 
             resetWeeklyVars();
