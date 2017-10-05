@@ -174,11 +174,9 @@ contract BillionaireTokenRaffle
 
     function resetWeeklyVars() public returns (bool success)
     {
-        /*
-            After the weekly vars have been been reset, the player that last
+        /*  After the weekly vars have been been reset, the player that last
             registered (if this gets called from registerTickets()) will have
-            to have his tickets added to next week's Raffle Bowl.
-        */
+            to have his tickets added to next week's Raffle Bowl.               */
 
         total_supply = ERC20_CALLS.totalSupply();
 
@@ -194,7 +192,7 @@ contract BillionaireTokenRaffle
         if (prev_week_ID > 2)
             prev_week_ID = 0;
 
-        /* Test if everything was cleared correctly. */
+        /* Should also test if everything was cleared correctly. */
         return success;
     }
 
@@ -231,8 +229,7 @@ contract BillionaireTokenRaffle
 
     function resetRaffle() public returns (int8 resetRaffle_STATUS)
     {
-        /*
-            resetRaffle STATUS CODES:
+        /*  resetRaffle STATUS CODES:
             
             [-4] - Raffle still has tokens after fillBurner().
             [-3] - fillBurner() error.
@@ -241,8 +238,7 @@ contract BillionaireTokenRaffle
             [0 ] - ALL OK.
             [1 ] - Only one player, was refunded.
             [2 ] - Two players, were refunded.
-            [3 ] - Three players, refunded.
-        */
+            [3 ] - Three players, refunded.            */
 
         while (now >= next_week_timestamp)
         {
@@ -367,10 +363,8 @@ contract BillionaireTokenRaffle
 
     function fillWeeklyArrays(uint256 number_of_tickets, address user_addr) private returns (int8 fillWeeklyArrays_STATUS)
     {
-        /*
-        *   [-1] Error with prev_week_ID
-        *   [0]  OK
-        */
+        /*  [-1] Error with prev_week_ID
+        *   [0]  OK                        */
 
         if ((prev_week_ID != 0) && (prev_week_ID != 1))
             return -1;
@@ -401,8 +395,7 @@ contract BillionaireTokenRaffle
 
     function registerTickets(uint256 number_of_tickets) public returns (int8 registerTickets_STATUS)
     {
-        /*
-            registerTickets RETURN CODES:
+        /*  registerTickets RETURN CODES:
 
             [-6] - Raffle still has tickets after fillBurner() called 
             [-5] - fillBurner() null burner addr, raised error
@@ -410,8 +403,7 @@ contract BillionaireTokenRaffle
             [-3] - getWinners() fail, raised error.
             [-2] - ACTUAL ALLOWANCE CHECK MISMATCH.
             [-1] - INVALID INPUT (zero or too many tickets).
-            [0 ] - REGISTERED OK.
-        */
+            [0 ] - REGISTERED OK.                                   */
 
         /* Check the deadline */
         if (now >= next_week_timestamp)
@@ -444,7 +436,6 @@ contract BillionaireTokenRaffle
 
         /*  Reaching this point means the ticket registrant is legit  */
         /*  Every ticket will add an entry to the raffle_bowl         */
-
         if (fillWeeklyArrays(number_of_tickets, msg.sender) == -1)
             return -4; /* prev_week_ID invalid value */
 
@@ -466,7 +457,6 @@ contract BillionaireTokenRaffle
             return true;
         else
             return false;
-
         /* Test here to see if we need more checks. */
     }
 
