@@ -348,9 +348,6 @@ contract BillionaireTokenRaffle
         // Push this winner into the winner array.
         winners.push(winner_1);
 
-        // Delete the first winner's tickets from address_to_tickets
-        address_to_tickets[winner_1] = 0;
-
         // Acquire the second random number, while making sure it's not the same as a previous one.
         // We shall then generate a new seed by adding the second random number with a counter_seed;
         uint counter_seed = 742 * initial_rand; // Initiate the counter_seed.
@@ -440,7 +437,7 @@ contract BillionaireTokenRaffle
             raffle_bowl_counter += 1;
             _ticket_number -= 1;
         }
-        /* Capture a seed from the user */
+        /* Capture a seed from the user. */
         seeds.push(uint(sha256(user_addr)) * uint(sha256(now)));
 
         return 0;
