@@ -146,22 +146,16 @@ contract BillionaireTokenRaffle
 
     function setBurnerAddress(address _burner_addr) public onlyOwner
     {
-        /* Only the owner can set the burner address. */
         burner_addr = _burner_addr;
     }
 
     function setTicketPrice(uint256 _ticket_price) public onlyOwner
     {
-        /*   Only the owner may or may not be able to change ticket price.  */
-        /*   Should the ticket price always be fixed?                       */
-        /*   We can always update the Raffle.                               */
         ticket_price = _ticket_price;
     }
 
     function setOwnerAddr(address _owner_addr) public onlyOwner
     {
-        /* The owner can change the owner. */
-        /* Because he's the owner          */
         owner_addr = _owner_addr;
     }
 
@@ -235,21 +229,6 @@ contract BillionaireTokenRaffle
         }
     }
 
-    function clearAddressRaffleBowl(address winner_addr) public returns (bool success)
-    {
-        /* 
-        This function iterates through the raffle bowl mapping
-           and removes all the entries with a specific address. 
-        */
-        for (uint32 i = 0; i <= raffle_bowl_counter; i++)
-        {
-            if (raffle_bowl[i] == winner_addr)
-                raffle_bowl[i] = 0x0;
-            // Make sure this doesn't screw up the mapping and leave gaps!
-        }
-        return success;
-    }
-
     function resetRaffle() public returns (int8 resetRaffle_STATUS)
     {
         /*
@@ -263,16 +242,8 @@ contract BillionaireTokenRaffle
             [1 ] - Only one player, was refunded.
             [2 ] - Two players, were refunded.
             [3 ] - Three players, refunded.
-
-            resetRaffle() must:
-
-                 1. Give the players their rewards.
-                 2. Burn 10%.
-                 3. Send coins to the burner.
-                 4. Reset all the variables.
-                 5. After the variables are re-set, add whatever player registered
-                        after time to the new week's raffle_bowl.
         */
+
         while (now >= next_week_timestamp)
         {
             next_week_timestamp += minutes_in_a_week * 1 minutes;
@@ -280,9 +251,8 @@ contract BillionaireTokenRaffle
         }
 
         if (raffle_bowl_counter == 0)
-        {
-            /* We have no registrants.          */
-            /* Reset the rest of the stats here */
+        {    /*   We have no registrants.  */
+            /* Reset the stats and return */
             resetWeeklyVars();
             return -1;
         }
@@ -294,7 +264,7 @@ contract BillionaireTokenRaffle
             {
                 /* And delete their tickets from the mapping */
                 if (address_to_tickets[raffle_bowl[x]] != 0)
-                    ERC20_CALLS.transfer(raffle_bowl[x], address_to_tickets[raffle_bowl[x]] * ticket_price);
+                    ERC20_CALLS.transfer(raffle_bowl[x], address_to_tickets[raffle_bowl[x]]*ticket_price);
                     address_to_tickets[raffle_bowl[x]] = 0;
             }
 
@@ -306,11 +276,12 @@ contract BillionaireTokenRaffle
         getWinners(); /* Choose three winners */
 
         /* Do we have winners? */
-        if ((winner_1 == 0x0) || (winner_2 == 0x0) || (winner_3 == 0x0))
+        if ( (winner_1 == 0x0) || (winner_2 == 0x0) || (winner_3 == 0x0) )
             return -2;
 
         /* We have three winners! Proceed with rewards. */
         raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
+
         /* Transfer 40%, 20% and 10% of the tokens to their respective winners */ 
         ERC20_CALLS.transfer(winner_1, getPercent(40, raffle_balance));
         ERC20_CALLS.transfer(winner_2, getPercent(20, raffle_balance));
@@ -325,11 +296,10 @@ contract BillionaireTokenRaffle
         /* Reset variables. */
         resetWeeklyVars();
 
-        /* Sanity checks */
         if (ERC20_CALLS.balanceOf(raffle_addr) > 0)
             return -4; /* We still have a positive balance | error */
 
-        return 0; /* All OK. */
+        return 0; /* OK */
     }
 
     function getWinners() returns (uint getWinners_STATUS)
@@ -400,8 +370,6 @@ contract BillionaireTokenRaffle
     function fillWeeklyArrays(uint256 number_of_tickets, address user_addr) private returns (int8 fillWeeklyArrays_STATUS)
     {
         /*
-        *   This function fills the mappings after a succesful ticket registration.
-        *   -----------------------------------------------------------------------
         *   [-1] Error with prev_week_ID
         *   [0]  OK
         */
@@ -461,13 +429,12 @@ contract BillionaireTokenRaffle
             if (RAFFLE_STATUS == -4)
                 return -6; /* Raffle still has tickets after fillBurner() called */
         }
-        /* Before users will call registerTickets function,                          */
-        /* they will first have to call approve() on the XBL contract address        */
-        /* and approve the Raffle to spend tokens on their behalf.                   */
-        /* After they have called approve, they will have to call registerTickets()  */
+        /* Before users will call registerTickets function,they will first have to call approve()    */
+        /* on the XBL contract address and approve the Raffle to spend tokens on their behalf.      */
+        /* After they have called approve, they will have to call this registerTickets() function  */
 
-        /* Check for invalid inputs:                       */
-        /* Will have to revert() in cases of input errors */
+        /* Check for invalid inputs:                               */
+        /* [!] Will have to revert() in cases of input errors [!] */
         if (number_of_tickets == 0)
             return -1;
 
@@ -482,10 +449,11 @@ contract BillionaireTokenRaffle
 
         if (fillWeeklyArrays(number_of_tickets, msg.sender) == -1)
             return -4; /* prev_week_ID invalid value */
+
         else
-        {
-            ERC20_CALLS.transferFrom(msg.sender, raffle_addr, number_of_tickets*ticket_price);
-            return 0;
+        {   /* Everything checks out, transfer the coins from the user to the raffle */
+            ERC20_CALLS.transferFrom(msg.sender, raffle_addr, number_of_tickets * ticket_price);
+            return 0; 
         }
     }
 
