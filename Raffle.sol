@@ -17,6 +17,7 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
     inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
     number of tickets. This mapping is reset every time the internal timer resets (every seven days).
 */
+
 pragma solidity ^0.4.8;
 contract XBL_ERC20Wrapper
 {
@@ -301,15 +302,14 @@ contract BillionaireTokenRaffle
             /* Return 1, 2 or 3 depending on how many raffle players were refunded. */
             return int8(unique_players);
         }
-        /* Here we assume that we have more than three unique players in the raffle. */
-        /* Let's choose three winners */
-        getWinners();
+        /* Assuming that we have more than three unique players in the raffle. */
+        getWinners(); /* Choose three winners */
 
-        /* Do we even need this check? */
+        /* Do we have winners? */
         if ((winner_1 == 0x0) || (winner_2 == 0x0) || (winner_3 == 0x0))
             return -2;
 
-        /* We have three winners, proceed with rewards. */
+        /* We have three winners! Proceed with rewards. */
         raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
         /* Transfer 40%, 20% and 10% of the tokens to their respective winners */ 
         ERC20_CALLS.transfer(winner_1, getPercent(40, raffle_balance));
@@ -320,32 +320,32 @@ contract BillionaireTokenRaffle
 
         /* Fill the burner with the rest of the tokens. */
         if (fillBurner() == -1)
-            return -3; /* Burner addr NULL */ 
+            return -3; /* Burner addr NULL | error */ 
 
         /* Reset variables. */
         resetWeeklyVars();
 
         /* Sanity checks */
         if (ERC20_CALLS.balanceOf(raffle_addr) > 0)
-            return -4; /* We still have a positive balance */
+            return -4; /* We still have a positive balance | error */
 
-        return 0; // All OK.
+        return 0; /* All OK. */
     }
 
     function getWinners() returns (uint getWinners_STATUS)
     {
-        // Acquire the first random number using previous blockhash as an initial seed.
+        /* Acquire the first random number using previous blockhash as an initial seed. */
         uint initial_rand = getRand(seeds.length);
 
-        // Use this first random number to choose one of the seeds from the array.
+        /* Use this first random number to choose one of the seeds from the array. */
         uint firstwinner_rand = getRandWithSeed(seeds.length, seeds[initial_rand]);
 
-        // This new random number is used to grab the first winner's index from raffle_bowl.
+        /* This new random number is used to grab the first winner's index from raffle_bowl. */
         winner_1 = raffle_bowl[firstwinner_rand];
 
-        // Acquire the second random number, while making sure it's not the same as a previous one.
-        // We shall then generate a new seed by adding the second random number with a counter_seed;
-        uint counter_seed = 742 * initial_rand; // Initiate the counter_seed.
+        /* Acquire the second random number, while making sure it's not the same as a previous one. */
+        /* We shall then generate a new seed by adding the second random number with a counter_seed! */
+        uint counter_seed = firstwinner_rand+initial_rand;
 
         uint second_rand = uint(sha256(firstwinner_rand+initial_rand)) % seeds.length;
 
@@ -364,7 +364,7 @@ contract BillionaireTokenRaffle
             }
             counter_seed += counter_seed;
         }
-        counter_seed += counter_seed;
+        //counter_seed += counter_seed;
 
         uint third_rand = uint(sha256(secondwinner_rand+counter_seed)) % seeds.length;
 
@@ -380,7 +380,6 @@ contract BillionaireTokenRaffle
                     break;
                 }
             }
-
             counter_seed += counter_seed;
         }
         return 0;
@@ -394,9 +393,7 @@ contract BillionaireTokenRaffle
         if (burner_addr == 0x0)
             return -1;
 
-        uint256 leftover = ERC20_CALLS.balanceOf(raffle_addr);
-        ERC20_CALLS.transfer(burner_addr, leftover);
-
+        ERC20_CALLS.transfer(burner_addr, ERC20_CALLS.balanceOf(raffle_addr));
         return 0;
     }
 
