@@ -16,7 +16,6 @@ The Become a Billionaire raffle Smart Contract will run forever, and will have a
     itself every seven days. The players are registered to the Raffle by creating an internal mapping,
     inside the Smart Contract, a mapping of every address that registers tokens to it and their associated
     number of tickets. This mapping is reset every time the internal timer resets (every seven days).
-
 */
 pragma solidity ^0.4.8;
 contract XBL_ERC20Wrapper
@@ -35,7 +34,6 @@ contract BillionaireTokenRaffle
 
     /* Most of these variables must be made private before deploying the final version */
 
-    address[] public winners;
     address public winner_1;
     address public winner_2;
     address public winner_3;
@@ -345,9 +343,6 @@ contract BillionaireTokenRaffle
         // This new random number is used to grab the first winner's index from raffle_bowl.
         winner_1 = raffle_bowl[firstwinner_rand];
 
-        // Push this winner into the winner array.
-        winners.push(winner_1);
-
         // Acquire the second random number, while making sure it's not the same as a previous one.
         // We shall then generate a new seed by adding the second random number with a counter_seed;
         uint counter_seed = 742 * initial_rand; // Initiate the counter_seed.
@@ -364,7 +359,6 @@ contract BillionaireTokenRaffle
                 if (winner_2 != winner_1)
                 {
                     /* Repeat all of the steps for winner_1 once we have a unique player */
-                    winners.push(winner_2);
                     break;
                 }
             }
@@ -383,7 +377,6 @@ contract BillionaireTokenRaffle
             {
                 if ( (winner_3 != winner_1) && (winner_3 != winner_2) )
                 {
-                    winners.push(winner_3);
                     break;
                 }
             }
