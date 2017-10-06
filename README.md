@@ -20,7 +20,7 @@ Example:
   **function approve(address _spender, uint256 _amount) returns (bool success)**
 
 
-So the user will first call approve(RAFFLE_ADDRESS, 20000000000000000000) on the XBL Contract Address. They have just approved the Raffle to spend 10 XBL (+18 zeroes) on their behalf.
+The user will first call approve(RAFFLE_ADDRESS, 20000000000000000000) on the XBL Contract Address. They have just approved the Raffle to spend 10 XBL (+18 zeroes) on their behalf.
 
 
   **function registerTickets(uint256 number_of_tickets) returns (int8 registerTickets_STATUS)**
