@@ -159,13 +159,13 @@ contract BillionaireTokenRaffle
 
         total_supply = ERC20_CALLS.totalSupply();
         /* Clear everything. */
+        clearAddressMappings();
         raffle_bowl_counter = 0;
         unique_players = 0;
         winner_1 = 0x0;
         winner_2 = 0x0;
         winner_3 = 0x0;
         seeds.length = 0;
-        clearAddressMappings();
         
         prev_week_ID++;
         if (prev_week_ID > 2)
@@ -228,11 +228,14 @@ contract BillionaireTokenRaffle
             for (uint x = 0; x < raffle_bowl_counter; x++)
             { /* Refund their tokens */ 
                 if (address_to_tickets[raffle_bowl[x]] != 0)
+                {
                     ERC20_CALLS.transfer(raffle_bowl[x], address_to_tickets[raffle_bowl[x]]*ticket_price);
+                    address_to_tickets[raffle_bowl[x] = 0;
+                }
             }
-
+            /* Reset variables. */
             resetWeeklyVars();
-            /* Return 1, 2 or 3 depending on how many raffle players were refunded */
+            /* And return 1, 2 or 3 depending on how many raffle players were refunded */
             return int8(unique_players);
         }
         /* At this point we assume that we have more than three unique players */
@@ -352,8 +355,8 @@ contract BillionaireTokenRaffle
         while (_ticket_number > 0)
         {
             raffle_bowl[raffle_bowl_counter] = user_addr;
-            raffle_bowl_counter += 1;
-            _ticket_number -= 1;
+            raffle_bowl_counter++;
+            _ticket_number--;
         }
         /* Capture a seed from the user. */
         seeds.push(uint(sha256(user_addr)) * uint(sha256(now)));
