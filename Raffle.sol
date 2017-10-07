@@ -35,9 +35,9 @@ contract BillionaireTokenRaffle
 
     /* Most of these variables must be made private before deploying the final version */
 
-    address public winner_1;
-    address public winner_2;
-    address public winner_3;
+    address public winner1;
+    address public winner2;
+    address public winner3;
 
     address public XBLContract_addr;
     address public burner_addr;
@@ -162,9 +162,9 @@ contract BillionaireTokenRaffle
         clearAddressMappings();
         raffle_bowl_counter = 0;
         unique_players = 0;
-        winner_1 = 0x0;
-        winner_2 = 0x0;
-        winner_3 = 0x0;
+        winner1 = 0x0;
+        winner2 = 0x0;
+        winner3 = 0x0;
         seeds.length = 0;
         
         prev_week_ID++;
@@ -214,7 +214,7 @@ contract BillionaireTokenRaffle
         while (now >= next_week_timestamp)
         {
             next_week_timestamp += minutes_in_a_week * 1 minutes;
-            current_week += 1;
+            current_week++;
         }
 
         if (raffle_bowl_counter == 0)
@@ -242,16 +242,16 @@ contract BillionaireTokenRaffle
         getWinners(); /* Choose three winners */
 
         /* Do we have winners? */
-        if ( (winner_1 == 0x0) || (winner_2 == 0x0) || (winner_3 == 0x0) )
+        if ( (winner1 == 0x0) || (winner2 == 0x0) || (winner3 == 0x0) )
             return -2;
 
         /* We have three winners! Proceed with rewards */
         raffle_balance = ERC20_CALLS.balanceOf(raffle_addr);
 
         /* Transfer 40%, 20% and 10% of the tokens to their respective winners */ 
-        ERC20_CALLS.transfer(winner_1, getPercent(40, raffle_balance));
-        ERC20_CALLS.transfer(winner_2, getPercent(20, raffle_balance));
-        ERC20_CALLS.transfer(winner_3, getPercent(10, raffle_balance));
+        ERC20_CALLS.transfer(winner1, getPercent(40, raffle_balance));
+        ERC20_CALLS.transfer(winner2, getPercent(20, raffle_balance));
+        ERC20_CALLS.transfer(winner3, getPercent(10, raffle_balance));
         /* Burn 10% */
         burnTenPercent(raffle_balance);
 
@@ -268,7 +268,7 @@ contract BillionaireTokenRaffle
         return 0; /* Everything OK */
     }
 
-    function getWinners() returns (uint getWinners_STATUS)
+    function getWinners() returns (int8 getWinners_STATUS)
     {
         /* Acquire the first random number using previous blockhash as an initial seed. */
         uint initial_rand = getRand(seeds.length);
@@ -277,47 +277,20 @@ contract BillionaireTokenRaffle
         uint firstwinner_rand = getRandWithSeed(seeds.length, seeds[initial_rand]);
 
         /* This new random number is used to grab the first winner's index from raffle_bowl. */
-        winner_1 = raffle_bowl[firstwinner_rand];
+        winner1 = raffle_bowl[firstwinner_rand];
 
-        /* Acquire the second random number, while making sure it's not the same as a previous one. */
-        /* We shall then generate a new seed by adding the second random number with a counter_seed! */
-        uint counter_seed = firstwinner_rand+initial_rand;
-
-        uint second_rand = uint(sha256(firstwinner_rand+initial_rand)) % seeds.length;
-
-        while (true)
+        /* Then choose two more winners */
+        for (uint x = (firstwinner_rand+1) % raffle_bowl_counter; x  != firstwinner_rand; x = (x+1) % raffle_bowl_counter)
         {
-            uint secondwinner_rand = uint(sha256(second_rand+counter_seed)) % seeds.length;
-            winner_2 = raffle_bowl[secondwinner_rand];
+            if ( (raffle_bowl[x] != winner1) && (winner2 == 0x0) )
+                winner2 = raffle_bowl[x];
 
-            if (secondwinner_rand != firstwinner_rand)
+            else if ( (raffle_bowl[x] != winner2) && (raffle_bowl[x] != winner1) )
             {
-                if (winner_2 != winner_1)
-                {
-                    /* Repeat all of the steps for winner_1 once we have a unique player */
-                    break;
-                }
+                winner3 = raffle_bowl[x];
+                return 0;
             }
-            counter_seed += counter_seed;
         }
-
-        uint third_rand = uint(sha256(secondwinner_rand+counter_seed)) % seeds.length;
-
-        while (true)
-        {
-            uint thirdwinner_rand = uint(sha256(third_rand+counter_seed)) % seeds.length;
-            winner_3 = raffle_bowl[thirdwinner_rand];
-
-            if ( (thirdwinner_rand != secondwinner_rand) && (thirdwinner_rand != firstwinner_rand) )
-            {
-                if ( (winner_3 != winner_1) && (winner_3 != winner_2) )
-                {
-                    break;
-                }
-            }
-            counter_seed += counter_seed;
-        }
-        return 0;
     }
 
     function fillBurner() private returns (int8 fillBurner_STATUS)
@@ -435,7 +408,7 @@ contract BillionaireTokenRaffle
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
 
-    function dSetXBLAddr(address _XBLContract_addr) public onlyOwner
+    function dSET_XBL_ADDRESS(address _XBLContract_addr) public onlyOwner
     {
         /* Debugging purposes. This will be hardcoded in the original version. */
         XBLContract_addr = _XBLContract_addr;
@@ -443,12 +416,7 @@ contract BillionaireTokenRaffle
         total_supply = ERC20_CALLS.totalSupply();
     }
 
-    function dTestCallTotalSupply() public returns (uint256 total_supply)
-    {
-        return ERC20_CALLS.totalSupply();
-    }
-
-    function dTriggerNextWeekTimestamp() public
+    function dTRIGGER_NEXTWEEK_TIMESTAMP() public
     {
         next_week_timestamp = now;
     }
