@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.9, pre-release.
+The "Become a Billionaire" decentralized Raffle v0.9.5, testnet release.
 ~by Gluedog
 -----------
 
@@ -46,8 +46,8 @@ contract BillionaireTokenRaffle
     address public raffle_addr;
     address public owner_addr;
 
-    address[] raffle_bowl; /* Holds ticket entries */
-    uint256[] public seeds;
+    address[] private raffle_bowl; /* Holds ticket entries */
+    uint256[] private seeds;
 
     uint64 public unique_players; /* Unique number of addresses registered in a week */
     uint256 public total_burned_by_raffle;
@@ -57,7 +57,7 @@ contract BillionaireTokenRaffle
     uint256 public ticket_price;
     uint256 public current_week;
     uint256 public total_supply;
-    /* Init wrapper */
+    /* Init the wrapper */
     XBL_ERC20Wrapper private ERC20_CALLS;
 
     mapping(address => uint256) public address_to_tickets; /* Make private */
@@ -65,15 +65,16 @@ contract BillionaireTokenRaffle
     mapping(address => uint256) public address_to_tickets_prev_week1; /*  after each week's raffle has ended */
 
     uint8 public prev_week_ID; /* Keeps track of which variable is the correct indicator of prev week mapping
-                                    Can only be [0] or [1]. */
+                                    Can only be [0] or [1]. This must be public so that the burner knows which
+                                    of the arrays to query address_to_tickets_prev_week0/address_to_tickets_prev_week1 */
 
-    /* Debug vars */
+    /* Info vars */
     address public lastweek_winner1;
     address public lastweek_winner2;
     address public lastweek_winner3;
 
     /* Init */
-    function BillionaireTokenRaffle()
+    function BillionaireTokenRaffle() internal
     {
         /* Billionaire Token contract address */
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
@@ -82,13 +83,9 @@ contract BillionaireTokenRaffle
         {
             ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
             total_supply = ERC20_CALLS.totalSupply();
-            ticket_price = 10000000000000000000; /* 10 XBL  */
-        }
-        else if (DEBUG == true)
-        {
-            ticket_price = 10; /* Easier to test */
         }
 
+        ticket_price = 10000000000000000000; /* 10 XBL  */
         burner_addr = 0x0; /* Burner address                                      */
         raffle_addr = address(this); /* Own address                              */
         owner_addr = msg.sender; /* Set the owner address as the initial sender */
@@ -116,8 +113,10 @@ contract BillionaireTokenRaffle
 
     /* Burner accesible functions */
 
-    function getLastWeekStake(address user_addr) public onlyBurner returns (uint256 last_week_stake)
+    function getLastWeekStake(address user_addr) onlyBurner public returns (uint256 last_week_stake)
     {   /* The burner accesses this function to retrieve each player's stake from the previous week. */
+        /* There is something we can do to improve this function, the burner will query prev_week_ID and 
+            select the proper array and query it, removing any need for this function alltogether */
         if (prev_week_ID == 0)
             return address_to_tickets_prev_week0[user_addr];
         if (prev_week_ID == 1)
@@ -128,7 +127,7 @@ contract BillionaireTokenRaffle
     /* <<<--- Public utility functions --->>> */
     /* <<<--- Public utility functions --->>> */
 
-    function stakeOf(address player) onlyBurner returns (uint256 stake)
+    function stakeOf(address player) onlyBurner public returns (uint256 stake)
     {   /* This function takes a player address as argument and returns his stake
         (the full number of tokens he has registered for the raffle during that week) */
         stake = address_to_tickets[player] * ticket_price;
@@ -238,6 +237,9 @@ contract BillionaireTokenRaffle
         seeds.length = 0;
 
         unique_players = 0;
+        lastweek_winner1 = winner1;
+        lastweek_winner2 = winner2;
+        lastweek_winner3 = winner3;
         winner1 = 0x0;
         winner2 = 0x0;
         winner3 = 0x0;
@@ -251,7 +253,7 @@ contract BillionaireTokenRaffle
         return success;
     }
 
-    function clearAddressMappings() private returns (bool success)
+    function clearAddressMappings() private
     {   /*  Clears address_to_tickets, raffle_bowl and
             sets prev_week0 or prev_week1 mappings.            */
         
