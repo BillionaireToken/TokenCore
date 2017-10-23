@@ -3,7 +3,7 @@ The "Become a Billionaire" decentralized Raffle v0.9.5, testnet release.
 ~by Gluedog
 -----------
 
-Compiler version: 0.4.17+commit.bdeb9e52.Emscripten.clang
+Compiler version: 0.4.18+commit.9cf6e910.Emscripten.clang
 
 The weekly Become a Billionaire decentralized raffle is the basis of the deflationary mechanism for Billionaire Token
 ---------------------------------------------------------------------------------------------------------------------
