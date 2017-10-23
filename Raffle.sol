@@ -74,7 +74,7 @@ contract BillionaireTokenRaffle
     address public lastweek_winner3;
 
     /* Init */
-    function BillionaireTokenRaffle() internal
+    function BillionaireTokenRaffle()
     {
         /* Billionaire Token contract address */
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
