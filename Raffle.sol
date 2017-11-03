@@ -7,7 +7,7 @@ Compiler version: 0.4.18+commit.9cf6e910.Emscripten.clang
 
 The weekly Become a Billionaire decentralized raffle is the basis of the deflationary mechanism for Billionaire Token
 ---------------------------------------------------------------------------------------------------------------------
-Every week, users can send 10 XBL to an Ethereum Smart Contract address – this is the equivalent of buying one ticket,
+Every week, users can register 10 XBL to an Ethereum Smart Contract address – this is the equivalent of buying one ticket,
     more tickets mean a better chance to win. Users can buy an unlimited number of tickets to increase their chances.
     At the end of the week, the Smart Contract will choose three winners at random. First place will get 40% of
     the tokens  that were raised during that week, second place gets 20% and third place gets 10%.
@@ -46,8 +46,9 @@ contract BillionaireTokenRaffle
     address public raffle_addr;
     address public owner_addr;
 
-    address[] private raffle_bowl; /* Holds ticket entries */
-    uint256[] private seeds;
+    address[] raffle_bowl; /* Holds ticket entries */
+    address[] participants;
+    uint256[] public seeds;
 
     uint64 public unique_players; /* Unique number of addresses registered in a week */
     uint256 public total_burned_by_raffle;
@@ -57,7 +58,7 @@ contract BillionaireTokenRaffle
     uint256 public ticket_price;
     uint256 public current_week;
     uint256 public total_supply;
-    /* Init the wrapper */
+    /* Init wrapper */
     XBL_ERC20Wrapper private ERC20_CALLS;
 
     mapping(address => uint256) public address_to_tickets; /* Make private */
@@ -65,10 +66,8 @@ contract BillionaireTokenRaffle
     mapping(address => uint256) public address_to_tickets_prev_week1; /*  after each week's raffle has ended */
 
     uint8 public prev_week_ID; /* Keeps track of which variable is the correct indicator of prev week mapping
-                                    Can only be [0] or [1]. This must be public so that the burner knows which
-                                    of the arrays to query address_to_tickets_prev_week0/address_to_tickets_prev_week1 */
+                                    Can only be [0] or [1]. */
 
-    /* Info vars */
     address public lastweek_winner1;
     address public lastweek_winner2;
     address public lastweek_winner3;
@@ -89,9 +88,7 @@ contract BillionaireTokenRaffle
         burner_addr = 0x0; /* Burner address                                      */
         raffle_addr = address(this); /* Own address                              */
         owner_addr = msg.sender; /* Set the owner address as the initial sender */
-
         minutes_in_a_week = 10080;
-
         next_week_timestamp = now + minutes_in_a_week * 1 minutes; /* Will get set every time resetRaffle() is called */
     }
 
@@ -111,12 +108,15 @@ contract BillionaireTokenRaffle
         _;
     }
 
-    /* Burner accesible functions */
+    /* <<<--- Burner accesible functions --->>> */
+    /* <<<--- Burner accesible functions --->>> */
+    /* <<<--- Burner accesible functions --->>> */
 
-    function getLastWeekStake(address user_addr) onlyBurner public returns (uint256 last_week_stake)
+    function getLastWeekStake(address user_addr) public onlyBurner returns (uint256 last_week_stake)
     {   /* The burner accesses this function to retrieve each player's stake from the previous week. */
         /* There is something we can do to improve this function, the burner will query prev_week_ID and 
             select the proper array and query it, removing any need for this function alltogether */
+
         if (prev_week_ID == 0)
             return address_to_tickets_prev_week0[user_addr];
         if (prev_week_ID == 1)
@@ -127,7 +127,7 @@ contract BillionaireTokenRaffle
     /* <<<--- Public utility functions --->>> */
     /* <<<--- Public utility functions --->>> */
 
-    function stakeOf(address player) onlyBurner public returns (uint256 stake)
+    function stakeOf(address player) onlyBurner returns (uint256 stake)
     {   /* This function takes a player address as argument and returns his stake
         (the full number of tokens he has registered for the raffle during that week) */
         stake = address_to_tickets[player] * ticket_price;
@@ -166,7 +166,8 @@ contract BillionaireTokenRaffle
 
         /* Check for invalid inputs                                */
         /* [!] Will have to revert() in cases of input errors [!] */
-        if (number_of_tickets == 0)
+        if ( (number_of_tickets == 0) || (number_of_tickets > 5) )
+
             return -1;
 
         if (ERC20_CALLS.allowance(msg.sender, raffle_addr) < ticket_price * number_of_tickets)
@@ -231,12 +232,24 @@ contract BillionaireTokenRaffle
             to have his tickets added to next week's Raffle Bowl.               */
 
         total_supply = ERC20_CALLS.totalSupply();
-        /* Clear everything. */
-        clearAddressMappings();
-        raffle_bowl.length = 0;
-        seeds.length = 0;
 
+        /* Clear everything. */
+        for (uint i = 0; i < participants.length; i++)
+        {
+            address_to_tickets[participants[i]] = 0;
+
+            /* Clear the opposite of whatever prev_week_ID is */
+            if (prev_week_ID == 0)
+                address_to_tickets_prev_week1[participants[i]] = 0;
+            if (prev_week_ID == 1)
+                address_to_tickets_prev_week0[participants[i]] = 0;
+        }
+
+        seeds.length = 0;
+        raffle_bowl.length = 0;
+        participants.length = 0;
         unique_players = 0;
+        
         lastweek_winner1 = winner1;
         lastweek_winner2 = winner2;
         lastweek_winner3 = winner3;
@@ -251,28 +264,6 @@ contract BillionaireTokenRaffle
 
         /* Should also test if everything was cleared correctly. */
         return success;
-    }
-
-    function clearAddressMappings() private
-    {   /*  Clears address_to_tickets, raffle_bowl and
-            sets prev_week0 or prev_week1 mappings.            */
-        
-        address previous;
-
-        for (uint i = 0; i < raffle_bowl.length; i++)
-        {
-            if (previous == raffle_bowl[i])
-                continue;
-
-            previous = raffle_bowl[i];
-            address_to_tickets[raffle_bowl[i]] = 0;
-
-            /* Clear the opposite of whatever prev_week_ID is */
-            if (prev_week_ID == 0)
-                address_to_tickets_prev_week1[raffle_bowl[i]] = 0;
-            if (prev_week_ID == 1)
-                address_to_tickets_prev_week0[raffle_bowl[i]] = 0;
-        }
     }
 
     function resetRaffle() private returns (int8 resetRaffle_STATUS)
@@ -306,13 +297,13 @@ contract BillionaireTokenRaffle
             { /* Refund their tokens */ 
                 if (address_to_tickets[raffle_bowl[i]] != 0)
                 {
-                    ERC20_CALLS.transfer(raffle_bowl[i], address_to_tickets[raffle_bowl[i]]*ticket_price);
+                    ERC20_CALLS.transfer(raffle_bowl[i], address_to_tickets[raffle_bowl[i]] * ticket_price);
                     address_to_tickets[raffle_bowl[i]] = 0;
                 }
             }
             /* Reset variables. */
             resetWeeklyVars();
-            /* And return 1, 2 or 3 depending on how many raffle players were refunded */
+            /* Return 1, 2 or 3 depending on how many raffle players were refunded */
             return int8(unique_players);
         }
         /* At this point we assume that we have more than three unique players */
@@ -356,18 +347,37 @@ contract BillionaireTokenRaffle
         /* This new random number is used to grab the first winner's index from raffle_bowl. */
         winner1 = raffle_bowl[firstwinner_rand];
 
-        /* Then choose two more winners */
-        for (uint x = (firstwinner_rand+1) % raffle_bowl.length; x != firstwinner_rand; x = (x+1) % raffle_bowl.length)
+        /* Find the position of winner1 in participants[] */
+        for (uint16 i = 0; i < participants.length; i++)
         {
-            if ( (raffle_bowl[x] != winner1) && (winner2 == 0x0) )
-                winner2 = raffle_bowl[x];
-
-            else if ( (raffle_bowl[x] != winner2) && (raffle_bowl[x] != winner1) )
+            if (participants[i] == winner1)
             {
-                winner3 = raffle_bowl[x];
-                return 0;
+                uint16 winner1_index = i;
+                break;
             }
         }
+
+        /* Then choose two more winners, based on the initial position of winner1, looping over participants[] now. */
+        if (winner1_index+1 >= participants.length)
+        {
+            winner2 = participants[0];
+            winner3 = participants[1];
+
+            return 0;
+        }
+
+        if (winner1_index+2 >= participants.length)
+        {
+            winner2 = participants[winner1_index+1];
+            winner3 = participants[0];
+
+            return 0;
+        }
+
+        winner2 = participants[winner1_index+1];
+        winner3 = participants[winner1_index+2];
+
+        return 0;
     }
 
     function fillBurner() private returns (int8 fillBurner_STATUS)
@@ -390,9 +400,13 @@ contract BillionaireTokenRaffle
         if ((prev_week_ID != 0) && (prev_week_ID != 1))
             return -1;
 
-        /* If the address did not register tickets before, we will increment unique_players by one. */
+        /* Record unique players. */
+
         if (address_to_tickets[user_addr] == 0)
+        {
             unique_players++;
+            participants.push(user_addr);
+        }
 
         address_to_tickets[user_addr] += number_of_tickets;
         
