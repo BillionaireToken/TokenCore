@@ -1,4 +1,4 @@
-/* The Burner v0.2, pre-release.
+/* The Burner v0.3, pre-release.
 *  ~by gluedog
 *
 * The Burner is Billionaire Token's version of a "Faucet" - an evil, twisted Faucet. 
@@ -60,21 +60,20 @@ contract TheBurner
         _;
     }
 
-    function setRaffleAddress(address _raffle_addr) onlyOwner
+    function setRaffleAddress(address _raffle_addr) public onlyOwner
     {
         /* Allows the owner to set the raffle address */
         raffle_addr = _raffle_addr;
         RAFFLE_CALLS = XBL_RaffleWrapper(raffle_addr);
     }
 
-    function getPercent(uint8 percent, uint256 number) returns (uint256 result)
+    function getPercent(uint8 percent, uint256 number) private returns (uint256 result)
     {
         return number * percent / 100;
     }
 
     function registerBurn(uint256 tokens_registered) returns (int8 registerBurn_STATUS)
-    {
-        /* This will just throw if bad input */
+    {   /* throw if bad input */
         address user_addr = msg.sender;
 
         uint256 actual_allowance = ERC20_CALLS.allowance(user_addr, burner_addr);
@@ -85,7 +84,7 @@ contract TheBurner
         require (eligible_reward <= own_supply); // Do we have enough tokens to give out?
 
         uint256 prev_week_stake = RAFFLE_CALLS.getLastWeekStake(user_addr);
-        require (tokens_registered <= prev_week_stake); // Did he have enough tickets in last week's Raffle ?
+        require (tokens_registered <= prev_week_stake); // Did the user have enough tickets in last week's Raffle ?
 
         /* Reaching this point means we can give out the reward */
 
@@ -99,9 +98,9 @@ contract TheBurner
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
 
-    function setXBLAddr(address _XBLContract_addr) public onlyOwner
+    function dSET_XBL_ADDRESS(address _XBLContract_addr) public onlyOwner
     {
-        /* Debugging purposes. This will be hardcoded in the original version. */
+        /* Debugging purposes. This will be hardcoded in the deployable version. */
         XBLContract_addr = _XBLContract_addr;
         ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
     }
