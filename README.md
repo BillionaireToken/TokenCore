@@ -1,6 +1,6 @@
 # TokenCore
 
-### This is the github page for Billionaire Token: A super, deflationary gambling oriented, ERC-20 Ethereum token.
+### Welcome to the GitHub page for Billionaire Token: A super, deflationary gambling oriented, ERC-20 Ethereum token.
 
 ## Main components:
 
