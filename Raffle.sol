@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.9.5, testnet release.
+The "Become a Billionaire" decentralized Raffle v0.9.7, testnet release.
 ~by Gluedog
 -----------
 
@@ -82,13 +82,14 @@ contract BillionaireTokenRaffle
         {
             ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
             total_supply = ERC20_CALLS.totalSupply();
+            minutes_in_a_week = 10080;
         }
 
         ticket_price = 10000000000000000000; /* 10 XBL  */
         burner_addr = 0x0; /* Burner address                                      */
         raffle_addr = address(this); /* Own address                              */
         owner_addr = msg.sender; /* Set the owner address as the initial sender */
-        minutes_in_a_week = 10080;
+        minutes_in_a_week = 5760;
         next_week_timestamp = now + minutes_in_a_week * 1 minutes; /* Will get set every time resetRaffle() is called */
     }
 
@@ -146,7 +147,13 @@ contract BillionaireTokenRaffle
             [-1] - INVALID INPUT (zero or too many tickets).
             [0 ] - REGISTERED OK.                                   */
 
-        /* Check the deadline */
+        /* Check the ticket limit */
+        if (raffle_bowl.length > 250)
+        {
+            next_week_timestamp = now;
+        }
+
+        /* Check the time limit */
         if (now >= next_week_timestamp)
         {
             int8 RAFFLE_STATUS = resetRaffle();
@@ -166,8 +173,7 @@ contract BillionaireTokenRaffle
 
         /* Check for invalid inputs                                */
         /* [!] Will have to revert() in cases of input errors [!] */
-        if ( (number_of_tickets == 0) || (number_of_tickets > 5) )
-
+        if ( (number_of_tickets == 0) || (number_of_tickets > 5) || (address_to_tickets[msg.sender] > 5) )
             return -1;
 
         if (ERC20_CALLS.allowance(msg.sender, raffle_addr) < ticket_price * number_of_tickets)
@@ -455,5 +461,18 @@ contract BillionaireTokenRaffle
     function dTRIGGER_NEXTWEEK_TIMESTAMP() public onlyOwner
     {   /* Trigger end week quicker. */
         next_week_timestamp = now;
+    }
+
+    function dKERNEL_PANIC() public onlyOwner
+    {   /* Out of Gas panic function. Give everyone their XBL back. */
+        for (uint i = 0; i < raffle_bowl.length; i++)
+            { /* Refund their tokens */ 
+                if (address_to_tickets[raffle_bowl[i]] != 0)
+                {
+                    ERC20_CALLS.transfer(raffle_bowl[i], address_to_tickets[raffle_bowl[i]] * ticket_price);
+                    address_to_tickets[raffle_bowl[i]] = 0;
+                }
+            }
+        /* The raffle needs to be re-deployed at this point */
     }
 }
