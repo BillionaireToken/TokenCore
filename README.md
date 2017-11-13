@@ -26,14 +26,12 @@ The user will first call approve(RAFFLE_ADDRESS, 10000000000000000000) on the XB
   **function registerTickets(uint256 number_of_tickets) returns (int8 registerTickets_STATUS)**
 
 
-Assuming the price of one ticket is 10 XBL, then the user must call registerTickets(1) on the Raffle Contract Address.
-
-Now you're in. You've just registered a ticket to the raffle. You have the chance to become the grand winner!
+Assuming the price of one ticket is 10 XBL, then the user must call registerTickets(1) on the Raffle Contract Address. After that, they've just registered a ticket to the raffle. They have the chance to become the grand winner!
 
 All of this is easy for a cryptohead but might seem just a tad bit complicated for your average gambler.
 
-We will be aiming to go mainstream with Billionaire Token and as such we will develop a GUI to be used in conjunction with the Raffle and the Burner .
-This GUI will make use of Metamask and web3 and will be usable through our website initially. We will also be looking into developing stand-alone clients.
+We want to go mainstream with Billionaire Token and as such we have developed and are maintaining and updating web-based graphical user interface to be used in conjunction with the Raffle and the Burner .
+This GUI makes use of Metamask and web3 and is be usable through our website. We will also be looking into developing stand-alone clients.
 
 People will play the Raffle, play with the Burner, play Poker and not even know they're on a blockchain! 
 It will be gambling for the masses with all the benefits that crypto currencies and blockchain technology brings: accountability, traceability and security.
