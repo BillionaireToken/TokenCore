@@ -28,6 +28,8 @@ The user will first call approve(RAFFLE_ADDRESS, 10000000000000000000) on the XB
 
 Assuming the price of one ticket is 10 XBL, then the user must call registerTickets(1) on the Raffle Contract Address. After that, they've just registered a ticket to the raffle. They have the chance to become the grand winner!
 
+### ------ 
+
 All of this is easy for a cryptohead but might seem just a tad bit complicated for your average gambler.
 
 We want to go mainstream with Billionaire Token and as such we have developed and are maintaining and updating web-based graphical user interface to be used in conjunction with the Raffle and the Burner .
