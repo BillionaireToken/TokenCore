@@ -39,4 +39,4 @@ People will play the Raffle, play with the Burner, play Poker and not even know 
 It will be gambling for the masses with all the benefits that crypto currencies and blockchain technology brings: accountability, traceability and security.
 
 
-For more information visit https://BillionaireToken.com
+For more information visit https://BillionaireToken.com/Raffle
