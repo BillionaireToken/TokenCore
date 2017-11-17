@@ -1,9 +1,10 @@
-/* The Burner v0.3, pre-release.
+/* The Burner v0.9, testnet release.
 *  ~by gluedog
 *
 * The Burner is Billionaire Token's version of a "Faucet" - an evil, twisted Faucet. 
 * Just like a Faucet, people can use it to get some extra coins. 
 * Unlike a Faucet, the Burner will also burn coins and reduce the maximum supply in the process of giving people extra coins.
+* The burner is only usable 
 */
 
 pragma solidity ^0.4.8;
@@ -73,24 +74,16 @@ contract TheBurner
     }
 
     function registerBurn(uint256 tokens_registered) returns (int8 registerBurn_STATUS)
-    {   /* throw if bad input */
-        address user_addr = msg.sender;
+    {   /* Throw if bad input */
+        require (tokens_registered <= RAFFLE_CALLS.getLastWeekStake(msg.sender)); /* Did the user have enough tickets in last week's Raffle ? */
+        require (ERC20_CALLS.allowance(msg.sender, burner_addr) >= tokens_registered); /* Did the user pre-allow enough tokens ? */
 
-        uint256 actual_allowance = ERC20_CALLS.allowance(user_addr, burner_addr);
-        require (actual_allowance >= tokens_registered); // Is the user bullshitting us?
-
-        uint256 own_supply = ERC20_CALLS.balanceOf(burner_addr);
         uint256 eligible_reward = tokens_registered + getPercent(extra_bonus, tokens_registered);
-        require (eligible_reward <= own_supply); // Do we have enough tokens to give out?
-
-        uint256 prev_week_stake = RAFFLE_CALLS.getLastWeekStake(user_addr);
-        require (tokens_registered <= prev_week_stake); // Did the user have enough tickets in last week's Raffle ?
-
-        /* Reaching this point means we can give out the reward */
+        require (eligible_reward <= ERC20_CALLS.balanceOf(burner_addr)); /* Do we have enough tokens to give out? */
 
         /* Burn their tokens and give them their reward */
-        ERC20_CALLS.burnFrom(user_addr, tokens_registered);
-        ERC20_CALLS.transfer(user_addr, eligible_reward);
+        ERC20_CALLS.burnFrom(msg.sender, tokens_registered);
+        ERC20_CALLS.transfer(msg.sender, eligible_reward);
     }
 
 
@@ -99,9 +92,13 @@ contract TheBurner
     /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
 
     function dSET_XBL_ADDRESS(address _XBLContract_addr) public onlyOwner
-    {
-        /* Debugging purposes. This will be hardcoded in the deployable version. */
+    {/* Debugging purposes. This will be hardcoded in the deployable version. */
         XBLContract_addr = _XBLContract_addr;
         ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+    }
+
+    function dTEST_LASTWEEKSTAKE(address player) public returns (uint256 stake)
+    {
+    	return RAFFLE_CALLS.getLastWeekStake(player);
     }
 }
