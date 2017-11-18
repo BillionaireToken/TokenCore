@@ -46,9 +46,9 @@ contract BillionaireTokenRaffle
     address public raffle_addr;
     address public owner_addr;
 
-    address[] raffle_bowl; /* Holds ticket entries */
-    address[] participants;
-    uint256[] public seeds;
+    address[] private raffle_bowl; /* Holds ticket entries */
+    address[] private participants;
+    uint256[] private seeds;
 
     uint64 public unique_players; /* Unique number of addresses registered in a week */
     uint256 public total_burned_by_raffle;
@@ -58,7 +58,7 @@ contract BillionaireTokenRaffle
     uint256 public ticket_price;
     uint256 public current_week;
     uint256 public total_supply;
-    /* Init wrapper */
+    /* Initiate the XBL token wrapper */
     XBL_ERC20Wrapper private ERC20_CALLS;
 
     mapping(address => uint256) public address_to_tickets; /* Make private */
@@ -117,7 +117,6 @@ contract BillionaireTokenRaffle
     {   /* The burner accesses this function to retrieve each player's stake from the previous week. */
         /* There is something we can do to improve this function, the burner will query prev_week_ID and 
             select the proper array and query it, removing any need for this function alltogether */
-
         if (prev_week_ID == 0)
             return address_to_tickets_prev_week0[user_addr];
         if (prev_week_ID == 1)
@@ -171,16 +170,15 @@ contract BillionaireTokenRaffle
         /* on the XBL contract address and approve the Raffle to spend tokens on their behalf.      */
         /* After they have called approve, they will have to call this registerTickets() function  */
 
-        /* Check for invalid inputs                                */
         /* [!] Will have to revert() in cases of input errors [!] */
-        if ( (number_of_tickets == 0) || (number_of_tickets > 5) || (address_to_tickets[msg.sender] > 5) )
-            return -1;
+        if ( (number_of_tickets == 0) || (number_of_tickets > 5) || (address_to_tickets[msg.sender] >= 5) )
+            return -1; /* Invalid Input */
 
         if (ERC20_CALLS.allowance(msg.sender, raffle_addr) < ticket_price * number_of_tickets)
-            return -2;
+            return -2; /* Allowance check mismatch */
 
         if (ERC20_CALLS.balanceOf(msg.sender) < ticket_price * number_of_tickets) 
-            return - 2;
+            return - 2; /* Allowance check mismatch */
 
         /*  Reaching this point means the ticket registrant is legit  */
         /*  Every ticket will add an entry to the raffle_bowl         */
@@ -263,10 +261,9 @@ contract BillionaireTokenRaffle
         winner2 = 0x0;
         winner3 = 0x0;
         
+        prev_week_ID++;
         if (prev_week_ID == 2)
             prev_week_ID = 0;
-        else
-            prev_week_ID++;
 
         /* Should also test if everything was cleared correctly. */
         return success;
@@ -275,7 +272,8 @@ contract BillionaireTokenRaffle
     function resetRaffle() private returns (int8 resetRaffle_STATUS)
     {
         /*  resetRaffle STATUS CODES:
-            
+
+            [-5] - burnTenPercent() error            
             [-4] - Raffle still has tokens after fillBurner().
             [-3] - fillBurner() error.
             [-2] - getWinners() error.
@@ -327,7 +325,8 @@ contract BillionaireTokenRaffle
         ERC20_CALLS.transfer(winner2, getPercent(20, raffle_balance));
         ERC20_CALLS.transfer(winner3, getPercent(10, raffle_balance));
         /* Burn 10% */
-        burnTenPercent(raffle_balance);
+        if (burnTenPercent(raffle_balance) != true)
+            return -5;
 
         /* Fill the burner with the rest of the tokens. */
         if (fillBurner() == -1)
@@ -407,7 +406,6 @@ contract BillionaireTokenRaffle
             return -1;
 
         /* Record unique players. */
-
         if (address_to_tickets[user_addr] == 0)
         {
             unique_players++;
@@ -437,14 +435,11 @@ contract BillionaireTokenRaffle
     {
         uint256 amount_to_burn = getPercent(10, raffle_balance);
         total_burned_by_raffle += amount_to_burn;
-
-        bool burn_success = ERC20_CALLS.burn(amount_to_burn);
-
-        if (burn_success == true)
+        /* Burn the coins, return success state */
+        if (ERC20_CALLS.burn(amount_to_burn) == true)
             return true;
         else
             return false;
-        /* Test here to see if we need more checks. */
     }
 
     /* <<<--- Debug ONLY functions --->>> */
