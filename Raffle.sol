@@ -1,5 +1,5 @@
 /*
-The "Become a Billionaire" decentralized Raffle v0.9.7, testnet release.
+The "Become a Billionaire" decentralized Raffle v0.9.8, testnet release.
 ~by Gluedog
 -----------
 
@@ -115,24 +115,23 @@ contract BillionaireTokenRaffle
 
     function getLastWeekStake(address user_addr) public onlyBurner returns (uint256 last_week_stake)
     {   /* The burner accesses this function to retrieve each player's stake from the previous week. */
-        /* There is something we can do to improve this function, the burner will query prev_week_ID and 
-            select the proper array and query it, removing any need for this function alltogether */
         if (prev_week_ID == 0)
-            return address_to_tickets_prev_week0[user_addr];
+            return address_to_tickets_prev_week1[user_addr] * ticket_price;
         if (prev_week_ID == 1)
-            return address_to_tickets_prev_week1[user_addr];
+            return address_to_tickets_prev_week0[user_addr] * ticket_price;
+    }
+
+    function reduceLastWeekStake(address user_addr, uint256 amount) public onlyBurner returns (int8 reduceLastWeekStake_STATUS)
+    {   /* After a succesful burn, the burner will call this function and reduce the player's last_week_stake. */
+        if (prev_week_ID == 0)
+            address_to_tickets_prev_week1[user_addr] -= amount / ticket_price;
+        if (prev_week_ID == 1)
+            address_to_tickets_prev_week1[user_addr] -= amount / ticket_price;
     }
 
     /* <<<--- Public utility functions --->>> */
     /* <<<--- Public utility functions --->>> */
     /* <<<--- Public utility functions --->>> */
-
-    function stakeOf(address player) onlyBurner returns (uint256 stake)
-    {   /* This function takes a player address as argument and returns his stake
-        (the full number of tokens he has registered for the raffle during that week) */
-        stake = address_to_tickets[player] * ticket_price;
-        return stake;
-    }
 
     function registerTickets(uint256 number_of_tickets) public returns (int8 registerTickets_STATUS)
     {
