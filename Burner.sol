@@ -1,4 +1,4 @@
-/* The Burner v0.99, testnet release.
+/* The Burner v0.99, Main Net release.
 *  ~by gluedog
 *
 * The Burner is Billionaire Token's version of a "Faucet" - an evil, twisted Faucet. 
