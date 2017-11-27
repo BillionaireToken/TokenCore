@@ -23,7 +23,7 @@ contract XBL_ERC20Wrapper
 contract XBL_RaffleWrapper
 {
     function getLastWeekStake(address user_addr) public returns (uint256 last_week_stake);
-    function reduceLastWeekStake(address user_addr, uint256 amount) public returns (int8 reduceLastWeekStake_STATUS)
+    function reduceLastWeekStake(address user_addr, uint256 amount) public returns (int8 reduceLastWeekStake_STATUS);
 }
 
 contract TheBurner
