@@ -1,4 +1,4 @@
-/* The Burner v0.99, Main Net release.
+/* The Burner v0.99, MainNet release.
 *  ~by gluedog
 *
 * The Burner is Billionaire Token's version of a "Faucet" - an evil, twisted Faucet. 
@@ -29,6 +29,7 @@ contract XBL_RaffleWrapper
 contract TheBurner
 {
     bool DEBUG = true;
+    uint256 DECIMALS = 1000000000000000000;
 
     XBL_ERC20Wrapper ERC20_CALLS;
     XBL_RaffleWrapper RAFFLE_CALLS;
@@ -74,9 +75,13 @@ contract TheBurner
     }
 
     function registerBurn(uint256 tokens_registered) returns (int8 registerBurn_STATUS)
-    {   /* Throw if bad input */
-        require (tokens_registered <= RAFFLE_CALLS.getLastWeekStake(msg.sender)); /* Did the user have enough tickets in last week's Raffle ? */
-        require (ERC20_CALLS.allowance(msg.sender, burner_addr) >= tokens_registered); /* Did the user pre-allow enough tokens ? */
+    {   /* This function will take a number as input, make it 18 decimal format, burn it, 
+    		and give it back to the user plus 5% if he is elligible
+    		If any of the rquire() conidtions are not met, contract will throw - BAD Instruction on the blockchain. 
+    	*/
+    	token_registered_real = tokens_registered*DECIMALS; /* 18 Decimals */
+    	require (ERC20_CALLS.allowance(msg.sender, burner_addr) >= tokens_registered); /* Did the user pre-allow enough tokens ? */
+        require (token_registered_real <= RAFFLE_CALLS.getLastWeekStake(msg.sender)); /* Did the user have enough tickets in last week's Raffle ? */
 
         uint256 eligible_reward = tokens_registered + getPercent(extra_bonus, tokens_registered);
         require (eligible_reward <= ERC20_CALLS.balanceOf(burner_addr)); /* Do we have enough tokens to give out? */
@@ -86,6 +91,8 @@ contract TheBurner
         ERC20_CALLS.transfer(msg.sender, eligible_reward);
 
         /* We have to reduce the users last_week_stake so that they can't burn all of the tokens, just the ones they contributed to the Raffle. */
+
+        RAFFLE_CALLS.reduceLastWeekStake(msg.sender, token_registered_real);
 
         return 0;
     }
