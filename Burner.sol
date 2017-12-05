@@ -7,7 +7,7 @@
 * The Burner is Billionaire Token's version of a "Faucet" - an evil, twisted Faucet. 
 * Just like a Faucet, people can use it to get some extra coins. 
 * Unlike a Faucet, the Burner will also burn coins and reduce the maximum supply in the process of giving people extra coins.
-* The burner is only usable 
+* The Burner is only usable by addresses who have also participated in the last week's Raffle round.
 */
 
 pragma solidity ^0.4.8;
@@ -70,9 +70,8 @@ contract TheBurner
     }
 
     function registerBurn(uint256 user_input) returns (int8 registerBurn_STATUS)
-    {   /* This function will take a number as input, make it 18 decimal format, burn it, 
-            and give it back to the user plus 5% if he is elligible
-            If any of the require() conidtions are not met, contract will throw - BAD Instruction on the blockchain. 
+    {   /* This function will take a number as input, make it 18 decimal format, burn the tokens, 
+            and give them back to the user plus 5% - if he is elligible of course.
         */
         uint256 tokens_registered = user_input*DECIMALS; /* 18 Decimals */
         require (ERC20_CALLS.allowance(msg.sender, burner_addr) >= tokens_registered); /* Did the user pre-allow enough tokens ? */
@@ -99,10 +98,5 @@ contract TheBurner
     {/* Debugging purposes. This will be hardcoded in the deployable version. */
         XBLContract_addr = _XBLContract_addr;
         ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
-    }
-
-    function dTEST_LASTWEEKSTAKE(address player) public returns (uint256 stake)
-    {
-        return RAFFLE_CALLS.getLastWeekStake(player);
     }
 }
