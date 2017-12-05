@@ -1,23 +1,23 @@
 /*
-The "Become a Billionaire" decentralized Raffle v1.0, Main-Net Release.
-~by Gluedog 
------------
-
-Compiler version: 0.4.19+commit.c4cbbb05.Emscripten.clang
-
-The weekly Become a Billionaire decentralized raffle is the basis of the deflationary mechanism for Billionaire Token
----------------------------------------------------------------------------------------------------------------------
-Every week, users can register 10 XBL to an Ethereum Smart Contract address – this is the equivalent of buying one ticket,
-    more tickets mean a better chance to win. Users can buy an unlimited number of tickets to increase their chances.
-    At the end of the week, the Smart Contract will choose three winners at random. First place will get 40% of
-    the tokens  that were raised during that week, second place gets 20% and third place gets 10%.
-    From the remaining 30% of the tokens: 10% are burned – as an offering to the market gods. The other 20% are sent
-    to another Smart Contract Address that works like a twisted faucet – rewarding people for burning their own coins.
-
-The Become a Billionaire raffle Smart Contract will run forever, and will have an internal timer that will reset
-    itself every seven days or after there have been 256 tickets registered to the Raffle. The players are registered
-    by creating an internal mapping, inside the Smart Contract, a mapping of every address that registers tokens to 
-    it and their associated number of tickets. This mapping is reset every time the internal timer resets (every seven days).
+* The "Become a Billionaire" decentralized Raffle v1.0, Main-Net Release.
+* ~by Gluedog 
+* -----------
+* 
+* Compiler version: 0.4.19+commit.c4cbbb05.Emscripten.clang
+* 
+* The weekly Become a Billionaire decentralized raffle is the basis of the deflationary mechanism for Billionaire Token
+* ---------------------------------------------------------------------------------------------------------------------
+* Every week, users can register 10 XBL to an Ethereum Smart Contract address – this is the equivalent of buying one ticket,
+*     more tickets mean a better chance to win. Users can buy an unlimited number of tickets to increase their chances.
+*     At the end of the week, the Smart Contract will choose three winners at random. First place will get 40% of
+*     the tokens  that were raised during that week, second place gets 20% and third place gets 10%.
+*     From the remaining 30% of the tokens: 10% are burned – as an offering to the market gods. The other 20% are sent
+*     to another Smart Contract Address that works like a twisted faucet – rewarding people for burning their own coins.
+* 
+* The Become a Billionaire raffle Smart Contract will run forever, and will have an internal timer that will reset
+*     itself every seven days or after there have been 256 tickets registered to the Raffle. The players are registered
+*     by creating an internal mapping, inside the Smart Contract, a mapping of every address that registers tokens to 
+*     it and their associated number of tickets. This mapping is reset every time the internal timer resets (every seven days).
 */
 
 pragma solidity ^0.4.8;
@@ -72,6 +72,8 @@ contract BillionaireTokenRaffle
     {
         /* Billionaire Token contract address */
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
+        ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
+        total_supply = ERC20_CALLS.totalSupply();
         ticket_price = 10000000000000000000; /* 10 XBL  */
         raffle_addr = address(this); /* Own address                              */
         owner_addr = msg.sender; /* Set the owner address as the initial sender */
@@ -248,7 +250,6 @@ contract BillionaireTokenRaffle
         if (prev_week_ID == 2)
             prev_week_ID = 0;
 
-        /* Should also test if everything was cleared correctly. */
         return success;
     }
 
@@ -274,8 +275,9 @@ contract BillionaireTokenRaffle
 
         if (raffle_bowl.length == 0)
         {   /*   We have no registrants.  */
+            /* Reset the stats and return */
             resetWeeklyVars(); 
-            return -1; /* Reset the stats and return */
+            return -1;
         }
 
         if (unique_players < 4)
@@ -442,9 +444,9 @@ contract BillionaireTokenRaffle
     }
 
     function dKERNEL_PANIC() public onlyOwner
-    {   /* Out of Gas panic function. Give everyone their XBL back. */
+    {   /* Out of Gas panic function. */
         for (uint i = 0; i < raffle_bowl.length; i++)
-        { /* Refund their tokens */ 
+        { /* Refund everyone's tokens */ 
             if (address_to_tickets[raffle_bowl[i]] != 0)
             {
                 ERC20_CALLS.transfer(raffle_bowl[i], address_to_tickets[raffle_bowl[i]] * ticket_price);
