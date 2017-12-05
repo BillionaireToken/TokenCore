@@ -1,9 +1,9 @@
 /*
-The "Become a Billionaire" decentralized Raffle v1.0, MainNet Release.
-~by Gluedog
+The "Become a Billionaire" decentralized Raffle v1.0, Main-Net Release.
+~by Gluedog 
 -----------
 
-Compiler version: 0.4.18+commit.9cf6e910.Emscripten.clang
+Compiler version: 0.4.19+commit.c4cbbb05.Emscripten.clang
 
 The weekly Become a Billionaire decentralized raffle is the basis of the deflationary mechanism for Billionaire Token
 ---------------------------------------------------------------------------------------------------------------------
@@ -33,8 +33,6 @@ contract XBL_ERC20Wrapper
 
 contract BillionaireTokenRaffle
 {
-    bool private DEBUG = true;
-
     address private winner1;
     address private winner2;
     address private winner3;
@@ -51,7 +49,7 @@ contract BillionaireTokenRaffle
     uint64 public unique_players; /* Unique number of addresses registered in a week */
     uint256 public total_burned_by_raffle;
     uint256 public next_week_timestamp;
-    uint256 private minutes_in_a_week;
+    uint256 private minutes_in_a_week = 10080;
     uint256 public raffle_balance;
     uint256 public ticket_price;
     uint256 public current_week;
@@ -59,13 +57,12 @@ contract BillionaireTokenRaffle
     /* Initiate the XBL token wrapper */
     XBL_ERC20Wrapper private ERC20_CALLS;
 
-    mapping(address => uint256) public address_to_tickets; /* Make private */
+    mapping(address => uint256) public address_to_tickets; /* Will be made private after open beta is finished. */
     mapping(address => uint256) public address_to_tokens_prev_week0; /* Variables which will be made public  */
     mapping(address => uint256) public address_to_tokens_prev_week1; /*  after each week's raffle has ended */
 
     uint8 public prev_week_ID; /* Keeps track of which variable is the correct indicator of prev week mapping
                                     Can only be [0] or [1]. */
-
     address public lastweek_winner1;
     address public lastweek_winner2;
     address public lastweek_winner3;
@@ -75,19 +72,9 @@ contract BillionaireTokenRaffle
     {
         /* Billionaire Token contract address */
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
-
-        if (DEBUG == false)
-        {
-            ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
-            total_supply = ERC20_CALLS.totalSupply();
-            minutes_in_a_week = 10080;
-        }
-
         ticket_price = 10000000000000000000; /* 10 XBL  */
-        burner_addr = 0x0; /* Burner address                                      */
         raffle_addr = address(this); /* Own address                              */
         owner_addr = msg.sender; /* Set the owner address as the initial sender */
-        minutes_in_a_week = 5760;
         next_week_timestamp = now + minutes_in_a_week * 1 minutes; /* Will get set every time resetRaffle() is called */
     }
 
@@ -119,7 +106,7 @@ contract BillionaireTokenRaffle
             return address_to_tokens_prev_week0[user_addr];
     }
 
-    function reduceLastWeekStake(address user_addr, uint256 amount) public onlyBurner returns (int8 reduceLastWeekStake_STATUS)
+    function reduceLastWeekStake(address user_addr, uint256 amount) public onlyBurner
     {   /* After a succesful burn, the burner will call this function and reduce the player's last_week_stake. */
         if (prev_week_ID == 0)
             address_to_tokens_prev_week1[user_addr] -= amount;
@@ -143,13 +130,13 @@ contract BillionaireTokenRaffle
             [-1] - INVALID INPUT (zero or too many tickets).
             [0 ] - REGISTERED OK.                                   */
 
-        /* Check the ticket limit (256 max) */
+        /* Check the ticket amount limit (256 max) */
         if (raffle_bowl.length > 256)
         {
             next_week_timestamp = now;
         }
 
-        /* Check the time limit */
+        /* Check the time limit, one week is max. */
         if (now >= next_week_timestamp)
         {
             int8 RAFFLE_STATUS = resetRaffle();
