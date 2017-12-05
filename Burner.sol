@@ -1,5 +1,8 @@
-/* The Burner v0.99, MainNet release.
-*  ~by gluedog
+/* The Burner v1.0, Main-Net release.
+*  ~by Gluedog 
+*  -----------
+*
+*  Compiler version: 0.4.19+commit.c4cbbb05.Emscripten.clang
 *
 * The Burner is Billionaire Token's version of a "Faucet" - an evil, twisted Faucet. 
 * Just like a Faucet, people can use it to get some extra coins. 
@@ -28,7 +31,6 @@ contract XBL_RaffleWrapper
 
 contract TheBurner
 {
-    bool DEBUG = true;
     uint256 DECIMALS = 1000000000000000000;
 
     XBL_ERC20Wrapper ERC20_CALLS;
@@ -45,13 +47,6 @@ contract TheBurner
     {
         XBLContract_addr = 0x49AeC0752E68D0282Db544C677f6BA407BA17ED7;
         raffle_addr = 0x0; /* Do we have a raffle address? */
-
-        if (DEBUG == false)
-        {
-            ERC20_CALLS = XBL_ERC20Wrapper(XBLContract_addr);
-            RAFFLE_CALLS = XBL_RaffleWrapper(raffle_addr);
-        }
-
         extra_bonus = 5; /* 5% reward for burning your own coins, provided the burner has enough. */
         burner_addr = address(this);
         owner_addr = msg.sender;
@@ -64,7 +59,7 @@ contract TheBurner
     }
 
     function setRaffleAddress(address _raffle_addr) public onlyOwner
-    {	/* Allows the owner to set the raffle address */
+    {   /* Allows the owner to set the raffle address */
         raffle_addr = _raffle_addr;
         RAFFLE_CALLS = XBL_RaffleWrapper(raffle_addr);
     }
@@ -74,15 +69,14 @@ contract TheBurner
         return number * percent / 100;
     }
 
-    function registerBurn(uint256 tokens_registered) returns (int8 registerBurn_STATUS)
+    function registerBurn(uint256 user_input) returns (int8 registerBurn_STATUS)
     {   /* This function will take a number as input, make it 18 decimal format, burn it, 
-    		and give it back to the user plus 5% if he is elligible
-    		If any of the rquire() conidtions are not met, contract will throw - BAD Instruction on the blockchain. 
-    	*/
-    	token_registered_real = tokens_registered*DECIMALS; /* 18 Decimals */
-    	require (ERC20_CALLS.allowance(msg.sender, burner_addr) >= tokens_registered); /* Did the user pre-allow enough tokens ? */
-        require (token_registered_real <= RAFFLE_CALLS.getLastWeekStake(msg.sender)); /* Did the user have enough tickets in last week's Raffle ? */
-
+            and give it back to the user plus 5% if he is elligible
+            If any of the require() conidtions are not met, contract will throw - BAD Instruction on the blockchain. 
+        */
+        uint256 tokens_registered = user_input*DECIMALS; /* 18 Decimals */
+        require (ERC20_CALLS.allowance(msg.sender, burner_addr) >= tokens_registered); /* Did the user pre-allow enough tokens ? */
+        require (tokens_registered <= RAFFLE_CALLS.getLastWeekStake(msg.sender)); /* Did the user have enough tickets in last week's Raffle ? */
         uint256 eligible_reward = tokens_registered + getPercent(extra_bonus, tokens_registered);
         require (eligible_reward <= ERC20_CALLS.balanceOf(burner_addr)); /* Do we have enough tokens to give out? */
 
@@ -91,16 +85,15 @@ contract TheBurner
         ERC20_CALLS.transfer(msg.sender, eligible_reward);
 
         /* We have to reduce the users last_week_stake so that they can't burn all of the tokens, just the ones they contributed to the Raffle. */
-
-        RAFFLE_CALLS.reduceLastWeekStake(msg.sender, token_registered_real);
+        RAFFLE_CALLS.reduceLastWeekStake(msg.sender, tokens_registered);
 
         return 0;
     }
 
 
-    /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
-    /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
-    /* <<<--- Debug ONLY functions. These will be removed from the final version --->>> */
+    /* <<<--- Debug ONLY functions. --->>> */
+    /* <<<--- Debug ONLY functions. --->>> */
+    /* <<<--- Debug ONLY functions. --->>> */
 
     function dSET_XBL_ADDRESS(address _XBLContract_addr) public onlyOwner
     {/* Debugging purposes. This will be hardcoded in the deployable version. */
@@ -110,6 +103,6 @@ contract TheBurner
 
     function dTEST_LASTWEEKSTAKE(address player) public returns (uint256 stake)
     {
-    	return RAFFLE_CALLS.getLastWeekStake(player);
+        return RAFFLE_CALLS.getLastWeekStake(player);
     }
 }
